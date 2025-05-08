@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Presupuesto del Proyecto - Gestión de Filas</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.6.2/css/bootstrap.min.css">
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --accent: #e74c3c;
+            --light: #ecf0f1;
+            --success: #2ecc71;
+            --warning: #f39c12;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 30px 0;
+            text-align: center;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        h2 {
+            color: var(--primary);
+            margin: 25px 0 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--secondary);
+        }
+        
+        h3 {
+            color: var(--secondary);
+            margin: 20px 0 10px;
+        }
+        
+        .progress-container {
+            background-color: white;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+        
+        .progress-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .progress-date {
+            background-color: var(--secondary);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+        
+        .activity-container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+        
+        .activity-header {
+            background-color: var(--primary);
+            color: white;
+            padding: 15px 20px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .activity-content {
+            padding: 20px;
+        }
+        
+        .subactivity {
+            border-left: 3px solid var(--secondary);
+            padding: 10px 15px;
+            margin: 15px 0;
+            background-color: #f8f9fa;
+            border-radius: 0 4px 4px 0;
+        }
+        
+        .subactivity-header {
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: var(--primary);
+        }
+        
+        .cost {
+            font-weight: bold;
+            color: var(--accent);
+        }
+        
+        .percentage {
+            display: inline-block;
+            
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            margin-left: 10px;
+        }
+        
+        .highlight {
+            background-color: var(--secondary);
+            color: white;
+        }
+        
+        .summary-container {
+            display: flex;
+            gap: 30px;
+            margin-top: 40px;
+        }
+        
+        .summary-info {
+            flex: 1;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+        
+        .chart-container {
+            flex: 1;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            height: 500px;
+        }
+        
+        .total-box {
+            background-color: var(--primary);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            text-align: center;
+            font-size: 1.2rem;
+        }
+        
+        .total-amount {
+            font-size: 2rem;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .divider {
+            height: 1px;
+            background-color: #ddd;
+            margin: 20px 0;
+        }
+        
+        .key-indicator {
+            display: flex;
+            justify-content: space-between;
+            background-color: #f8f9fa;
+            padding: 10px 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        
+        .key-indicator.highlight-row {
+            background-color: #e3f2fd;
+            border-left: 4px solid var(--secondary);
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 50px;
+            color: #777;
+            padding: 20px 0;
+            border-top: 1px solid #ddd;
+        }
+        
+        @media (max-width: 768px) {
+            .summary-container {
+                flex-direction: column;
+            }
+            
+            .chart-container {
+                height: 400px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="#">Proyecto de Gestión de Turnos</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" 
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ml-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">Inicio</a>
+                    </li>
+                    <li class="nav-item active">
+                        <a class="nav-link" href="actividades.html">Control de actividades <span class="sr-only">(actual)</span></a>
+                    </li>
+                    <li class="nav-item">
+                    <a class="nav-link" href="totalactividades.html">Total de Actividades</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container" style="padding-top: 130px;">
+        <header>
+            <h1>Presupuesto del Proyecto</h1>
+            <p>Sistema de Gestión de Filas</p>
+        </header>
+        
+        <div class="progress-container">
+            <div class="progress-info">
+                <div>
+                    <h2 style="border-bottom: none; margin: 0;">Punto de Control</h2>
+                    <p>Actividades A - K2 (3.4 meses del proyecto)</p>
+                </div>
+                <div class="progress-date">2 de agosto de 2025</div>
+            </div>
+            <div class="divider"></div>
+            <div class="key-indicator">
+                <div>Duración del proyecto completo:</div>
+                <div><strong>21 de abril - 5 de octubre, 2025</strong></div>
+            </div>
+            <div class="key-indicator">
+                <div>Equipo:</div>
+                <div><strong>4 desarrolladores junior</strong></div>
+            </div>
+            <div class="key-indicator highlight-row">
+                <div>Salario mensual por desarrollador:</div>
+                <div class="cost">COP $3,000,000</div>
+            </div>
+        </div>
+        
+        <!-- Actividades y Subactividades -->
+        <h2>Desglose de Actividades y Costos</h2>
+        
+        <div class="activity-container">
+            <div class="activity-header">
+                <div>Actividad A: Análisis de Requisitos</div>
+                <div>COP $8,520,000 <span class="percentage">6.21%</span></div>
+            </div>
+            <div class="activity-content">
+                <div class="subactivity">
+                    <div class="subactivity-header">
+                        <div>A.1 Encuestas a los usuarios</div>
+                        <div>COP $1,200,000 <span class="percentage">0.87%</span></div>
+                    </div>
+                    <p>Diseño y aplicación de cuestionarios sobre tiempos de espera, satisfacción y mejoras deseadas.</p>
+                    <p><strong>Recursos:</strong> Plataforma de encuestas googleforms (gratuita), tiempo de personal existente para aplicar encuestas, análisis por desarrolladores del equipo.</p>
+                </div>
+                <div class="subactivity">
+                    <div class="subactivity-header">
+                        <div>A.2 Estudiar métodos actuales</div>
+                        <div>COP $2,640,000 <span class="percentage">1.92%</span></div>
+                    </div>
+                    <p>Revisión de sistemas de gestión de filas existentes y estudio de software similar.</p>
+                    <p><strong>Recursos:</strong> Tiempo de 2 desarrolladores durante 2 semanas, acceso a documentación de sistemas existentes, suscripción temporal a plataformas de benchmarking.</p>
+                </div>
+                <div class="subactivity">
+                    <div class="subactivity-header">
+                        <div>A.3 Definir funcionalidades específicas</div>
+                        <div>COP $2,400,000 <span class="percentage">1.75%</span></div>
+                    </div>
+                    <p>Definición de funciones del sistema basadas en encuestas y estudios previos.</p>
+                    <p><strong>Recursos:</strong> Tiempo de 4 desarrolladores durante 1 semana, software de modelado UML (Sparx Systems:$229 USD (licencia perpetua básica)).</p>
+                </div>
+                <div class="subactivity">
+                    <div class="subactivity-header">
+                        <div>A.4 Documentar requerimientos</div>
+                        <div>COP $2,280,000 <span class="percentage">1.66%</span></div>
+                    </div>
+                    <p>Redacción de documento con requisitos funcionales y no funcionales.</p>
+                    <p><strong>Recursos:</strong> Tiempo de 3 desarrolladores durante 1 semana, herramientas de edición colaborativa ya disponibles.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="activity-container">
+            <div class="activity-header">
+                <div>Actividad B: Análisis de Mercado</div>
+                <div>COP $6,480,000 <span class="percentage">4.72%</span></div>
+            </div>
+            <div class="activity-content">
+                <div class="subactivity">
+                    <div class="subactivity-header">
+                        <div>B.1 Estudio de competencia</div>
+                        <div>COP $3,240,000 <span class="percentage">2.36%</span></div>
+                    </div>
+                    <p>Investigación de soluciones similares en el mercado y análisis FODA de competidores.</p>
+                    <p><strong>Recursos:</strong> Tiempo de 2 desarrolladores durante 1 semanas, acceso a informes de mercado ya adquiridos.</p>
+                </div>
+                <div class="subactivity">
+                    <div class="subactivity-header">
+                        <div>B.2 Análisis financiero</div>
+                        <div>COP $3,240,000 <span class="percentage">2.36%</span></div>
+                    </div>
+                    <p>Cálculo de costos y estimación de retorno de inversión.</p>
+                    <p><strong>Recursos:</strong> Tiempo de 2 desarrolladores durante 2 semanas, colaboración con departamento financiero existente.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="activity-container">
+            <div class="activity-header">
+                <div>Actividad C: Diseño de Arquitectura</div>
+                <div>COP $7,020,000 <span class="percentage">5.11%</span></div>
+            </div>
+            <div class="activity-content">
+                <div class="subactivity">
+                    <div class="subactivity-header">
+                        <div>C.1 Casos de uso (Relación usuario-Software)</div>
+                        <div>COP $3,240,000 <span class="percentage">2.36%</span></div>
+                    </div>
+                    <p>Identificación de actores principales y descripción de interacciones típicas.</p>
+                    <p><strong>Recursos:</strong> Tiempo de 2 desarrolladores durante 1 semana, software de modelado ya disponible.</p>
+                </div>
+                <div class="subactivity">
+                    <div class="subactivity-header">
+                        <div>C.2 Diagramar estructura del sistema</div>
+                        <div>COP $3,780,000 <span class="percentage">2.75%</span></div>
+                    </div>
+                    <p>Creación de diagramas arquitectónicos y definición de capas de aplicación.</p>
+                    <p><strong>Recursos:</strong> Tiempo de 3 desarrolladores durante 1.5 semanas, herramientas de diagramación ya disponibles.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="activity-container">
+            <div class="activity-header">
+                <div>Actividad D: Diseño de UI/UX</div>
+                <div>COP $7,560,000 <span class="percentage">5.51%</span></div>
+            </div>
+            <div class="activity-content">
+                <div class="subactivity">
+                    <div class="subactivity-header">
+                        <div>D.1 Wireframes</div>
+                        <div>COP $3,240,000 <span class="percentage">2.36%</span></div>
+                    </div>
+                    <p>Diseño de esquemas básicos de cada pantalla mostrando disposición de elementos clave.</p>
+                    <p><strong>Recursos:</strong> Tiempo de 2 desarrolladores durante 2 semanas, herramientas de wireframing  como Figma.</p>
+                </div>
+                <div class="subactivity">
+                    <div class="subactivity-header">
+                        <div>D.2 Mockups interactivos</div>
+                        <div>COP $4,320,000 <span class="percentage">3.15%</span></div>
+                    </div>
+                    <p>Transformación de wireframes en diseños detallados con prototipos interactivos.</p>
+                    <p><strong>Recursos:</strong> Tiempo de 3 desarrolladores durante 1.8 semanas, licencia Figma ya disponible.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="activity-container">
+            <div class="activity-header">
+                <div>Actividad E: Configuración del Entorno</div>
+                <div>COP $6,840,000 <span class="percentage">4.98%</span></div>
+            </div>
+            <div class="activity-content">
+                <div class="subactivity">
+                    <div class="subactivity-header">
+                        <div>E.1 Instalación de herramientas</div>
+                        <div>COP $1,440,000 <span class="percentage">1.05%</span></div>
+                    </div>
+                    <p>Configuración de entornos de desarrollo e instalación de herramientas necesarias.</p>
+                    <p><strong>Recursos:</strong> Tiempo de 1 desarrollador durante 0.5 semanas, la mayoría de herramientas son open source.</p>
+                </div>
+                <div class="subactivity">
+                    <div class="subactivity-header">
+                        <div>E.2 Configuración de servidores</div>
+                        <div>COP $2,880,000 <span class="percentage">2.10%</span></div>
+                    </div>
+                    <p>Aprovisionamiento de servidores para entornos de desarrollo, pruebas y producción.</p>
+                    <p><strong>Recursos:</strong> Tiempo de 2 desarrolladores durante 0.5 semanas, costos de servidores en la nube.</p>
+                </div>
+                <div class="subactivity">
+                    <div class="subactivity-header">
+                        <div>E.3 Configuración de repositorios</div>
+                        <div>COP $2,520,000 <span class="percentage">1.84%</span></div>
+                    </div>
+                    <p>Creación de estructura de repositorios de código y configuración de CI/CD.</p>
+                    <p><strong>Recursos:</strong> Tiempo de 2 desarrolladores durante 0.5 semanas, GitHub/GitLab ya contratado.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="activity-container">
+            <div class="activity-header">
+                <div>Actividad F: Desarrollo de Base de Datos</div>
+                <div>COP $8,640,000 <span class="percentage">6.29%</span></div>
+            </div>
+            <div class="activity-content">
+                <div class="subactivity">
+                    <div class="subactivity-header">
+                        <div>F.1 Modelo de datos</div>
+                        <div>COP $4,320,000 <span class="percentage">3.15%</span></div>
+                    </div>
+                    <p>Identificación de entidades principales y creación de diagramas entidad-relación.</p>
+                    <p><strong>Recursos:</strong> Tiempo de 3 desarrolladores durante 1 semana, herramientas de modelado ya disponibles como lucid-chart.</p>
+                </div>
+                <div class="subactivity">
+                    <div class="subactivity-header">
+                        <div>F.2 Implementación de esquemas</div>
+                        <div>COP $4,320,000 <span class="percentage">3.15%</span></div>
+                    </div>
+                    <p>Traducción de modelos conceptuales a scripts SQL y creación de tablas e índices.</p>
+                    <p><strong>Recursos:</strong> Tiempo de 3 desarrolladores durante 1.8 semanas, sistema de gestión de base de datos open source.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="activity-container">
+            <div class="activity-header">
+                <div>Actividad G: Desarrollo de Algoritmos Core</div>
+                <div>COP $14,760,000 <span class="percentage">10.75%</span></div>
+            </div>
+            <div class="activity-content">
+                <div class="subactivity">
+                    <div class="subactivity-header">
+                        <div>G.1 Algoritmos de gestión de filas</div>
+                        <div>COP $5,040,000 <span class="percentage">3.67%</span></div>
+                    </div>
+                    <p>Diseño de lógica para manejo y avance de colas, con optimización de tiempos de espera.</p>
+                    <p><strong>Recursos:</strong> Tiempo de 3.5 desarrolladores durante 1.5 semanas, librerías de algoritmos gratuitas.</p>
+                </div>
+                <div class="subactivity">
+                    <div class="subactivity-header">
+                        <div>G.2 Sistema de asignación de turnos</div>
+                        <div>COP $4,320,000 <span class="percentage">3.15%</span></div>
+                    </div>
+                    <p>Implementación de mecanismos para generar identificadores únicos de turnos.</p>
+                    <p><strong>Recursos:</strong> Tiempo de 3 desarrolladores durante 1.8 semanas.</p>
+                </div>
+                <div class="subactivity">
+                    <div class="subactivity-header">
+                        <div>G.3 Algoritmos de priorización</div>
+                        <div>COP $5,400,000 <span class="percentage">3.93%</span></div>
+                    </div>
+                    <p>Diseño de reglas para identificar casos prioritarios con lógica de ponderación.</p>
+                    <p><strong>Recursos:</strong> Tiempo de 3 desarrolladores durante 1 semana, consultoría interna con expertos en procesos.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="activity-container">
+            <div class="activity-header">
+                <div>Actividad H: Desarrollo de Módulos Administrativos</div>
+                <div>COP $10,080,000 <span class="percentage">7.34%</span></div>
+            </div>
+            <div class="activity-content">
+                <div class="subactivity">
+                    <div class="subactivity-header">
+                        <div>H.1 Desarrollo de panel de control</div>
+                        <div>COP $6,120,000 <span class="percentage">4.46%</span></div>
+                    </div>
+                    <p>Creación de interfaces administrativas con dashboards analíticos en tiempo real.</p>
+                    <p><strong>Recursos:</strong> Tiempo de 3 desarrolladores durante 2.5 semanas, bibliotecas de gráficos open source.</p>
+                </div>
+                <div class="subactivity">
+                    <div class="subactivity-header">
+                        <div>H.2 Gestión de operadores</div>
+                        <div>COP $3,960,000 <span class="percentage">2.88%</span></div>
+                    </div>
+                    <p>Desarrollo de módulos para administrar cuentas de operadores y control de acceso.</p>
+                    <p><strong>Recursos:</strong> Tiempo de 2.75 desarrolladores durante 1.5 semanas, framework de autenticación ya disponible.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="activity-container">
+            <div class="activity-header">
+                <div>Actividad I: Sistema de Notificaciones</div>
+                <div>COP $7,920,000 <span class="percentage">5.77%</span></div>
+            </div>
+            <div class="activity-content">
+                <div class="subactivity">
+                    <div class="subactivity-header">
+                        <div>I.1 Sistema de notificaciones push</div>
+                        <div>COP $3,960,000 <span class="percentage">2.88%</span></div>
+                    </div>
+                    <p>Implementación de infraestructura para envío de notificaciones en tiempo real.</p>
+                    <p><strong>Recursos:</strong> Tiempo de 2.75 desarrolladores durante 1.5 semanas, servicio Firebase (tier de pago).</p>
+                </div>
+                <div class="subactivity">
+                    <div class="subactivity-header">
+                        <div>I.2 Integraciones con SMS/email</div>
+                        <div>COP $3,960,000 <span class="percentage">2.88%</span></div>
+                    </div>
+                    <p>Conexión con APIs de proveedores de mensajería y desarrollo de plantillas.</p>
+                    <p><strong>Recursos:</strong> Tiempo de 2.75 desarrolladores durante 1 semana, créditos iniciales de servicios SMS/email.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="activity-container">
+            <div class="activity-header">
+                <div>Actividad J: Desarrollo Frontend</div>
+                <div>COP $11,160,000 <span class="percentage">8.13%</span></div>
+            </div>
+            <div class="activity-content">
+                <div class="subactivity">
+                    <div class="subactivity-header">
+                        <div>J.1 Desarrollo frontend web</div>
+                        <div>COP $5,580,000 <span class="percentage">4.06%</span></div>
+                    </div>
+                    <p>Implementación de interfaces de usuario basadas en mockups aprobados.</p>
+                    <p><strong>Recursos:</strong> Tiempo de 2 desarrolladores durante 2 semanas, frameworks frontend open source, librerías de componentes gratuitas.</p>
+                </div>
+                <div class="subactivity">
+                    <div class="subactivity-header">
+                        <div>J.2 Desarrollo app móvil</div>
+                        <div>COP $5,580,000 <span class="percentage">4.06%</span></div>
+                    </div>
+                    <p>Creación de aplicaciones nativas o híbridas para iOS y Android.</p>
+                    <p><strong>Recursos:</strong> Tiempo de 2 desarrolladores durante 2 semanas, framework React Native (pago), licencia de desarrollador Android: $25 USD pago único / iOS:$99 USD al año.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="activity-container">
+            <div class="activity-header">
+                <div>Actividad K: Desarrollo Backend</div>
+                <div>COP $7,020,000 <span class="percentage">5.11%</span></div>
+            </div>
+            <div class="activity-content">
+                <div class="subactivity">
+                    <div class="subactivity-header">
+                        <div>K.1 Desarrollo de endpoints</div>
+                        <div>COP $3,780,000 <span class="percentage">2.75%</span></div>
+                    </div>
+                    <p>Diseño e implementación de APIs RESTful o GraphQL.</p>
+                    <p><strong>Recursos:</strong> Tiempo de 3 desarrolladores durante 1 semana, frameworks backend open source.</p>
+                </div>
+                <div class="subactivity">
+                    <div class="subactivity-header">
+                        <div>K.2 Integración y pruebas de API</div>
+                        <div>COP $3,240,000 <span class="percentage">2.36%</span></div>
+                    </div>
+                    <p>Verificación de comunicación entre frontend y backend con pruebas automatizadas.</p>
+                    <p><strong>Recursos:</strong> Tiempo de 3 desarrolladores durante 1 semana, herramientas de testing automatizado gratuitas.</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Aquí termina el punto de control, las siguientes actividades son para referencia del presupuesto total -->
+        
+        <div class="activity-container" style="opacity: 0.6;">
+            <div class="activity-header">
+                <div>Actividad L: Testing y QA</div>
+                <div>COP $12,420,000 <span class="percentage">9.05%</span></div>
+            </div>
+            <div class="activity-content">
+                <p style="font-style: italic; text-align: center;">Esta actividad está fuera del punto de control al 2 de agosto.</p>
+            </div>
+        </div>
+        
+        <div class="activity-container" style="opacity: 0.6;">
+            <div class="activity-header">
+                <div>Actividad M: Optimización</div>
+                <div>COP $8,100,000 <span class="percentage">5.90%</span></div>
+            </div>
+            <div class="activity-content">
+                <p style="font-style: italic; text-align: center;">Esta actividad está fuera del punto de control al 2 de agosto.</p>
+            </div>
+        </div>
+        
+        <div class="activity-container" style="opacity: 0.6;">
+            <div class="activity-header">
+                <div>Actividad N: Despliegue</div>
+                <div>COP $6,480,000 <span class="percentage">4.72%</span></div>
+            </div>
+            <div class="activity-content">
+                <p style="font-style: italic; text-align: center;">Esta actividad está fuera del punto de control al 2 de agosto.</p>
+            </div>
+        </div>
+        
+        <div class="activity-container" style="opacity: 0.6;">
+            <div class="activity-header">
+                <div>Actividad O: Capacitación</div>
+                <div>COP $5,400,000 <span class="percentage">3.93%</span></div>
+            </div>
+            <div class="activity-content">
+                <p style="font-style: italic; text-align: center;">Esta actividad está fuera del punto de control al 2 de agosto.</p>
+            </div>
+        </div>
+        
+        <div class="activity-container" style="opacity: 0.6;">
+            <div class="activity-header">
+                <div>Actividad P: Soporte y Mantenimiento</div>
+                <div>COP $8,910,000 <span class="percentage">6.49%</span></div>
+            </div>
+            <div class="activity-content">
+                <p style="font-style: italic; text-align: center;">Esta actividad está fuera del punto de control al 2 de agosto.</p>
+            </div>
+        </div>
+        
+        <!-- Resumen y Gráficos -->
+        <h2>Resumen del Presupuesto</h2>
+        
+        <div class="summary-container">
+            <div class="summary-info">
+                <h3>Presupuesto Total del Proyecto (A-P)</h3>
+                <div class="key-indicator">
+                    <div>Presupuesto total (100%):</div>
+                    <div class="cost">COP $137,310,000</div>
+                </div>
+        
+                <div class="divider"></div>
+        
+                <h3>Punto de Control (A-K2)</h3>
+                <div class="key-indicator highlight-row">
+                    <div>Presupuesto punto de control:</div>
+                    <div class="cost">COP $96,000,000</div>
+                </div>
+                <div class="key-indicator">
+                    <div>Porcentaje del presupuesto total:</div>
+                    <div><strong>69.91%</strong></div>
+                </div>
+        
+                <div class="total-box">
+                    <div>Presupuesto Punto de Control (2 de agosto)</div>
+                    <div class="total-amount">COP $96,000,000</div>
+                    <div>69.91% del presupuesto total</div>
+                </div>
+            </div>
+        
+            <div class="chart-container">
+                <canvas id="presupuestoChart"></canvas>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Presupuesto actualizado el 7 de mayo de 2025 | Sistema de Gestión de Filas (SILAS)</p>
+        </footer>
+        
+    </div>
+    
+    <script>
+        const ctx = document.getElementById('presupuestoChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K'],
+                datasets: [{
+                    label: 'Porcentaje del Presupuesto',
+                    data: [6.21, 4.72, 5.11, 5.51, 4.98, 6.29, 10.75, 7.34, 5.77, 8.13, 5.11],
+                    backgroundColor: '#3498db',
+                    borderColor: '#2980b9',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        const doughnutCtx = document.getElementById('doughnutChart').getContext('2d');
+        new Chart(doughnutCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Punto de Control (69.91%)', 'Restante (30.09%)'],
+                datasets: [{
+                    data: [65.59, 34.41],
+                    backgroundColor: ['#3498db', '#ecf0f1'],
+                    borderColor: ['#2980b9', '#bdc3c7'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Progreso del Presupuesto'
+                    },
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
