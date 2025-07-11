@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flujo de Facturas - Bizagi</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .workflow {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .step {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .step::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+        }
+
+        .step:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+        }
+
+        .step-number {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 40px;
+            font-weight: bold;
+            margin-right: 15px;
+            font-size: 1.2em;
+        }
+
+        .step-content {
+            display: inline-block;
+            vertical-align: top;
+            width: calc(100% - 60px);
+        }
+
+        .step-title {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .step-description {
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .step-details {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .step-details strong {
+            color: #2c3e50;
+        }
+
+        .systems-involved {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .systems-title {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .systems-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .system-card {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .system-card:hover {
+            transform: scale(1.05);
+        }
+
+        .system-name {
+            font-weight: bold;
+            font-size: 1.1em;
+            margin-bottom: 5px;
+        }
+
+        .system-description {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .arrow {
+            text-align: center;
+            font-size: 2em;
+            color: white;
+            margin: 20px 0;
+            opacity: 0.7;
+        }
+
+        .roles-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .roles-title {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .roles-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .role-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .role-title {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .role-description {
+            color: #555;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .step-number {
+                width: 30px;
+                height: 30px;
+                line-height: 30px;
+                font-size: 1em;
+            }
+            
+            .step-content {
+                width: calc(100% - 45px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧾 Flujo de Facturas</h1>
+            <p>Proceso completo de facturación en Bizagi</p>
+        </div>
+
+        <div class="workflow">
+            <div class="step">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                    <div class="step-title">Creación del Caso de Facturación</div>
+                    <div class="step-description">
+                        Inicio del proceso de facturación por demanda desde Bizagi
+                    </div>
+                    <div class="step-details">
+                        <strong>Ruta:</strong> Nuevo Caso → Facturación A Un Clic → Facturación por Demanda<br>
+                        <strong>Datos requeridos:</strong> ID de negociación y selección de fuente<br>
+                        <strong>Resultado:</strong> Caso creado con actividades pendientes
+                    </div>
+                </div>
+            </div>
+
+            <div class="arrow">⬇️</div>
+
+            <div class="step">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                    <div class="step-title">Consulta y Cálculo Automático</div>
+                    <div class="step-description">
+                        Bizagi realiza consultas automáticas y calcula las prestaciones correspondientes
+                    </div>
+                    <div class="step-details">
+                        <strong>Proceso:</strong> Sistema consulta información de nómina y prestaciones<br>
+                        <strong>Sistemas involucrados:</strong> Bizagi, Master Data, Remuner<br>
+                        <strong>Resultado:</strong> Cálculos automáticos completados
+                    </div>
+                </div>
+            </div>
+
+            <div class="arrow">⬇️</div>
+
+            <div class="step">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                    <div class="step-title">Generación de Prefactura</div>
+                    <div class="step-description">
+                        El sistema genera la prefactura con todos los valores calculados
+                    </div>
+                    <div class="step-details">
+                        <strong>Responsable:</strong> Analista de facturación<br>
+                        <strong>Acción:</strong> Crear la prefactura con conceptos y valores<br>
+                        <strong>Verificación:</strong> Conceptos pendientes disponibles en consultas
+                    </div>
+                </div>
+            </div>
+
+            <div class="arrow">⬇️</div>
+
+            <div class="step">
+                <div class="step-number">4</div>
+                <div class="step-content">
+                    <div class="step-title">Revisión y Aprobación</div>
+                    <div class="step-description">
+                        El ejecutivo de cuenta revisa y aprueba la prefacturación
+                    </div>
+                    <div class="step-details">
+                        <strong>Responsable:</strong> Ejecutivo de cuenta<br>
+                        <strong>Acción:</strong> Aprobar la prefacturación<br>
+                        <strong>Resultado:</strong> Autorización para proceder a facturación final
+                    </div>
+                </div>
+            </div>
+
+            <div class="arrow">⬇️</div>
+
+            <div class="step">
+                <div class="step-number">5</div>
+                <div class="step-content">
+                    <div class="step-title">Facturación Final</div>
+                    <div class="step-description">
+                        Proceso final de facturación y envío al cliente
+                    </div>
+                    <div class="step-details">
+                        <strong>Proceso:</strong> Generación de factura definitiva<br>
+                        <strong>Integración:</strong> Envío a sistemas contables y financieros<br>
+                        <strong>Resultado:</strong> Factura enviada al cliente
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="systems-involved">
+            <div class="systems-title">🔧 Sistemas Involucrados</div>
+            <div class="systems-grid">
+                <div class="system-card">
+                    <div class="system-name">Bizagi</div>
+                    <div class="system-description">Control de procesos y casos</div>
+                </div>
+                <div class="system-card">
+                    <div class="system-name">Master Data</div>
+                    <div class="system-description">Base de datos principal</div>
+                </div>
+                <div class="system-card">
+                    <div class="system-name">Remuner</div>
+                    <div class="system-description">Gestión de nómina</div>
+                </div>
+                <div class="system-card">
+                    <div class="system-name">Finance</div>
+                    <div class="system-description">Sistema financiero</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="roles-section">
+            <div class="roles-title">👥 Roles y Responsabilidades</div>
+            <div class="roles-grid">
+                <div class="role-card">
+                    <div class="role-title">Analista de Facturación</div>
+                    <div class="role-description">
+                        • Crear la prefactura<br>
+                        • Verificar conceptos pendientes<br>
+                        • Validar cálculos automáticos
+                    </div>
+                </div>
+                <div class="role-card">
+                    <div class="role-title">Ejecutivo de Cuenta</div>
+                    <div class="role-description">
+                        • Revisar prefacturación<br>
+                        • Aprobar valores calculados<br>
+                        • Autorizar facturación final
+                    </div>
+                </div>
+                <div class="role-card">
+                    <div class="role-title">Sistema Bizagi</div>
+                    <div class="role-description">
+                        • Cálculo automático de prestaciones<br>
+                        • Consulta de información<br>
+                        • Gestión de casos y actividades
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
