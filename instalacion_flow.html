@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flujo de Proceso de Instalación</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .flow-container {
+            padding: 40px;
+            background: #f8f9fa;
+        }
+
+        .flow-step {
+            display: flex;
+            align-items: center;
+            margin-bottom: 30px;
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+        }
+
+        .flow-step:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+
+        .step-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2em;
+            margin-right: 25px;
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        .step-1 .step-icon { background: linear-gradient(135deg, #ff6b6b, #ee5a24); }
+        .step-2 .step-icon { background: linear-gradient(135deg, #4ecdc4, #44a08d); }
+        .step-3 .step-icon { background: linear-gradient(135deg, #45b7d1, #3742fa); }
+        .step-4 .step-icon { background: linear-gradient(135deg, #f39c12, #e67e22); }
+        .step-5 .step-icon { background: linear-gradient(135deg, #9b59b6, #8e44ad); }
+        .step-6 .step-icon { background: linear-gradient(135deg, #2ecc71, #27ae60); }
+
+        .step-content {
+            flex: 1;
+        }
+
+        .step-title {
+            font-size: 1.5em;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .step-description {
+            color: #7f8c8d;
+            font-size: 1.1em;
+            line-height: 1.6;
+        }
+
+        .step-details {
+            margin-top: 15px;
+            padding: 15px;
+            background: #ecf0f1;
+            border-radius: 10px;
+            border-left: 4px solid #3498db;
+        }
+
+        .step-details ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .step-details li {
+            margin-bottom: 8px;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .step-details li:before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: #3498db;
+            font-weight: bold;
+        }
+
+        .connector {
+            width: 4px;
+            height: 40px;
+            background: linear-gradient(to bottom, #3498db, #2ecc71);
+            margin: 0 auto 20px;
+            border-radius: 2px;
+            position: relative;
+        }
+
+        .connector::after {
+            content: "";
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-top: 12px solid #2ecc71;
+        }
+
+        .final-step {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            color: white;
+            text-align: center;
+            padding: 30px;
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+
+        .final-step h3 {
+            font-size: 1.8em;
+            margin-bottom: 15px;
+        }
+
+        .final-step p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .systems-integration {
+            background: #34495e;
+            color: white;
+            padding: 30px;
+            margin-top: 30px;
+            border-radius: 15px;
+        }
+
+        .systems-integration h3 {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1.6em;
+        }
+
+        .systems-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .system-card {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .system-card:hover {
+            transform: scale(1.05);
+        }
+
+        .system-icon {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .flow-step {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .step-icon {
+                margin-right: 0;
+                margin-bottom: 20px;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Flujo de Proceso de Instalación</h1>
+            <p>Sistema Bizagi - Gestión de Headhunting y Contratación</p>
+        </div>
+        
+        <div class="flow-container">
+            <div class="flow-step step-1">
+                <div class="step-icon">🎯</div>
+                <div class="step-content">
+                    <h3 class="step-title">1. Nueva Oportunidad de Negocio</h3>
+                    <p class="step-description">El ejecutivo de cuenta identifica una nueva oportunidad con un cliente potencial</p>
+                    <div class="step-details">
+                        <ul>
+                            <li>Identificación del cliente objetivo</li>
+                            <li>Análisis de necesidades de personal</li>
+                            <li>Evaluación de requisitos específicos</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="connector"></div>
+
+            <div class="flow-step step-2">
+                <div class="step-icon">📋</div>
+                <div class="step-content">
+                    <h3 class="step-title">2. Creación de Ficha de Negociación</h3>
+                    <p class="step-description">Se genera la ficha de negociación que establece los términos del acuerdo con el cliente</p>
+                    <div class="step-details">
+                        <ul>
+                            <li>Definición de términos comerciales</li>
+                            <li>Especificación de cargos requeridos</li>
+                            <li>Establecimiento de condiciones laborales</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="connector"></div>
+
+            <div class="flow-step step-3">
+                <div class="step-icon">📊</div>
+                <div class="step-content">
+                    <h3 class="step-title">3. Plan de Instalación</h3>
+                    <p class="step-description">Se desarrolla el plan detallado para la implementación del servicio</p>
+                    <div class="step-details">
+                        <ul>
+                            <li>Compensación define tipo de nómina</li>
+                            <li>SSTA establece exámenes médicos</li>
+                            <li>Cronograma de implementación</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="connector"></div>
+
+            <div class="flow-step step-4">
+                <div class="step-icon">🏢</div>
+                <div class="step-content">
+                    <h3 class="step-title">4. Distribución de Cupos por Ciudad</h3>
+                    <p class="step-description">El ejecutivo distribuye los cupos disponibles según las necesidades geográficas</p>
+                    <div class="step-details">
+                        <ul>
+                            <li>Asignación de cupos por ubicación</li>
+                            <li>Enlace con líneas de registro</li>
+                            <li>Configuración de centros de costo</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="connector"></div>
+
+            <div class="flow-step step-5">
+                <div class="step-icon">🔗</div>
+                <div class="step-content">
+                    <h3 class="step-title">5. Enlace de Líneas de Registro</h3>
+                    <p class="step-description">Se vinculan las líneas de registro para asociar trabajadores con ciudades específicas</p>
+                    <div class="step-details">
+                        <ul>
+                            <li>Configuración de parámetros por cargo</li>
+                            <li>Vinculación trabajador-ciudad</li>
+                            <li>Validación de información</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="connector"></div>
+
+            <div class="flow-step step-6">
+                <div class="step-icon">✅</div>
+                <div class="step-content">
+                    <h3 class="step-title">6. Ficha de Negociación Completa</h3>
+                    <p class="step-description">La ficha queda finalizada y lista para iniciar el proceso de selección</p>
+                    <div class="step-details">
+                        <ul>
+                            <li>Validación de todos los componentes</li>
+                            <li>Aprobación final del proceso</li>
+                            <li>Activación del sistema de requisiciones</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="final-step">
+                <h3>🚀 Proceso de Selección Iniciado</h3>
+                <p>El sistema está listo para generar requisiciones y comenzar la búsqueda de candidatos</p>
+            </div>
+
+            <div class="systems-integration">
+                <h3>Integración de Sistemas</h3>
+                <div class="systems-grid">
+                    <div class="system-card">
+                        <div class="system-icon">⚙️</div>
+                        <h4>Bizagi</h4>
+                        <p>Motor de procesos</p>
+                    </div>
+                    <div class="system-card">
+                        <div class="system-icon">📦</div>
+                        <h4>Kit</h4>
+                        <p>Repositorio maestro</p>
+                    </div>
+                    <div class="system-card">
+                        <div class="system-icon">🗄️</div>
+                        <h4>Master Data</h4>
+                        <p>Base de datos</p>
+                    </div>
+                    <div class="system-card">
+                        <div class="system-icon">👥</div>
+                        <h4>Finance</h4>
+                        <p>Gestión de personal</p>
+                    </div>
+                    <div class="system-card">
+                        <div class="system-icon">💰</div>
+                        <h4>Remuner</h4>
+                        <p>Gestión de nómina</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
