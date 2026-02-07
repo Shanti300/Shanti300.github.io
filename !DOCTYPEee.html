@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Entrenador de Suma – Dealer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #0f172a;
+            color: #e5e7eb;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .game {
+            background: #020617;
+            padding: 30px;
+            border-radius: 12px;
+            text-align: center;
+            width: 320px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        h1 {
+            margin-bottom: 10px;
+            font-size: 22px;
+        }
+
+        .number {
+            font-size: 48px;
+            margin: 10px 0;
+            color: #38bdf8;
+        }
+
+        input {
+            width: 80px;
+            font-size: 22px;
+            text-align: center;
+            padding: 5px;
+            border-radius: 6px;
+            border: none;
+            margin-top: 10px;
+        }
+
+        button {
+            margin-top: 15px;
+            padding: 10px 20px;
+            font-size: 16px;
+            background: #22c55e;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #16a34a;
+        }
+
+        .result {
+            margin-top: 15px;
+            font-size: 18px;
+            min-height: 24px;
+        }
+
+        .score {
+            margin-top: 10px;
+            font-size: 16px;
+            color: #a5f3fc;
+        }
+    </style>
+</head>
+<body>
+
+<div class="game">
+    <h1>Entrenador Dealer</h1>
+
+    <p>Número actual:</p>
+    <div id="current" class="number">?</div>
+
+    <p>Suma este número:</p>
+    <div id="add" class="number">?</div>
+
+    <input type="number" id="answer" min="1" max="10" autofocus>
+
+    <br>
+    <button onclick="check()">Confirmar</button>
+
+    <div class="result" id="result"></div>
+    <div class="score">Puntos: <span id="score">0</span></div>
+</div>
+
+<script>
+    let current = randomNumber();
+    let add = randomNumber();
+    let score = 0;
+
+    updateUI();
+
+    function randomNumber() {
+        return Math.floor(Math.random() * 10) + 1;
+    }
+
+    function updateUI() {
+        document.getElementById("current").textContent = current;
+        document.getElementById("add").textContent = add;
+        document.getElementById("answer").value = "";
+        document.getElementById("answer").focus();
+    }
+
+    function check() {
+        const userAnswer = parseInt(document.getElementById("answer").value);
+        if (isNaN(userAnswer)) return;
+
+        let correct = current + add;
+        if (correct > 10) {
+            correct = correct - 10;
+        }
+
+        if (userAnswer === correct) {
+            score++;
+            document.getElementById("result").textContent = "✅ Correcto";
+            current = correct;
+        } else {
+            document.getElementById("result").textContent =
+                `❌ Incorrecto (era ${correct})`;
+            current = randomNumber();
+        }
+
+        add = randomNumber();
+        document.getElementById("score").textContent = score;
+        updateUI();
+    }
+
+    // Enter para confirmar
+    document.getElementById("answer").addEventListener("keyup", function (e) {
+        if (e.key === "Enter") check();
+    });
+</script>
+
+</body>
+</html>
