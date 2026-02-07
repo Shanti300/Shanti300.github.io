@@ -1,144 +1,259 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>Entrenador de Suma – Dealer</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<title>Dealer Trainer</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #0f172a;
-            color: #e5e7eb;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
+<style>
+body {
+    background: #020617;
+    color: #e5e7eb;
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
 
-        .game {
-            background: #020617;
-            padding: 30px;
-            border-radius: 12px;
-            text-align: center;
-            width: 320px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.5);
-        }
+.game {
+    background: #020617;
+    border: 2px solid #38bdf8;
+    border-radius: 16px;
+    padding: 20px;
+    width: 340px;
+    text-align: center;
+    box-shadow: 0 0 30px rgba(56,189,248,0.3);
+}
 
-        h1 {
-            margin-bottom: 10px;
-            font-size: 22px;
-        }
+.number {
+    font-size: 64px;
+    margin: 6px 0;
+    color: #38bdf8;
+    animation: pop 0.25s ease;
+}
 
-        .number {
-            font-size: 48px;
-            margin: 10px 0;
-            color: #38bdf8;
-        }
+@keyframes pop {
+    from { transform: scale(0.7); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
 
-        input {
-            width: 80px;
-            font-size: 22px;
-            text-align: center;
-            padding: 5px;
-            border-radius: 6px;
-            border: none;
-            margin-top: 10px;
-        }
+.timer {
+    height: 8px;
+    background: #1e293b;
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 8px 0 12px;
+}
 
-        button {
-            margin-top: 15px;
-            padding: 10px 20px;
-            font-size: 16px;
-            background: #22c55e;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-        }
+.timer-bar {
+    height: 100%;
+    background: #22c55e;
+    width: 100%;
+}
 
-        button:hover {
-            background: #16a34a;
-        }
+.keyboard {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    margin-top: 12px;
+}
 
-        .result {
-            margin-top: 15px;
-            font-size: 18px;
-            min-height: 24px;
-        }
+.key {
+    background: #0f172a;
+    border: 2px solid #38bdf8;
+    color: #e5e7eb;
+    font-size: 22px;
+    padding: 12px;
+    border-radius: 10px;
+    cursor: pointer;
+}
 
-        .score {
-            margin-top: 10px;
-            font-size: 16px;
-            color: #a5f3fc;
-        }
-    </style>
+.key:active {
+    transform: scale(0.9);
+    background: #38bdf8;
+    color: #020617;
+}
+
+.correct { animation: correct 0.4s; }
+@keyframes correct {
+    0% { background: #16a34a; }
+    100% { background: transparent; }
+}
+
+.wrong { animation: shake 0.4s; }
+@keyframes shake {
+    0% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    50% { transform: translateX(6px); }
+    75% { transform: translateX(-6px); }
+    100% { transform: translateX(0); }
+}
+
+.levels {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.levels button {
+    flex: 1;
+    margin: 0 4px;
+    padding: 6px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    background: #0f172a;
+    color: #e5e7eb;
+}
+
+.levels button.active {
+    background: #38bdf8;
+    color: #020617;
+}
+
+.stats {
+    margin-top: 10px;
+    font-size: 14px;
+    color: #a5f3fc;
+}
+</style>
 </head>
 <body>
 
-<div class="game">
-    <h1>Entrenador Dealer</h1>
+<div class="game" id="game">
+    <h2>Dealer Trainer</h2>
 
-    <p>Número actual:</p>
-    <div id="current" class="number">?</div>
+    <div class="levels">
+        <button onclick="setLevel('easy')" id="easy">Fácil</button>
+        <button onclick="setLevel('medium')" id="medium">Medio</button>
+        <button onclick="setLevel('hard')" id="hard">Difícil</button>
+    </div>
 
-    <p>Suma este número:</p>
-    <div id="add" class="number">?</div>
+    <div>Número actual</div>
+    <div class="number" id="current"></div>
 
-    <input type="number" id="answer" min="1" max="10" autofocus>
+    <div>Suma</div>
+    <div class="number" id="add"></div>
 
-    <br>
-    <button onclick="check()">Confirmar</button>
+    <div class="timer">
+        <div class="timer-bar" id="timerBar"></div>
+    </div>
 
-    <div class="result" id="result"></div>
-    <div class="score">Puntos: <span id="score">0</span></div>
+    <div class="keyboard">
+        <div class="key" onclick="answer(1)">1</div>
+        <div class="key" onclick="answer(2)">2</div>
+        <div class="key" onclick="answer(3)">3</div>
+        <div class="key" onclick="answer(4)">4</div>
+        <div class="key" onclick="answer(5)">5</div>
+        <div class="key" onclick="answer(6)">6</div>
+        <div class="key" onclick="answer(7)">7</div>
+        <div class="key" onclick="answer(8)">8</div>
+        <div class="key" onclick="answer(9)">9</div>
+        <div class="key" onclick="answer(0)">0</div>
+    </div>
+
+    <div class="stats">
+        Puntos: <span id="score">0</span> |
+        Racha: <span id="streak">0</span> |
+        Máx: <span id="maxStreak">0</span>
+    </div>
 </div>
 
 <script>
-    let current = randomNumber();
-    let add = randomNumber();
-    let score = 0;
+let current, add;
+let score = 0;
+let streak = 0;
+let maxStreak = 0;
+let timer;
+let timeLimit = 6000;
 
-    updateUI();
+function rand0to9() {
+    return Math.floor(Math.random() * 10);
+}
 
-    function randomNumber() {
-        return Math.floor(Math.random() * 10) + 1;
+function rand1to9() {
+    return Math.floor(Math.random() * 9) + 1;
+}
+
+function setLevel(level) {
+    document.querySelectorAll('.levels button')
+        .forEach(b => b.classList.remove('active'));
+
+    if (level === 'easy') timeLimit = 6000;
+    if (level === 'medium') timeLimit = 4000;
+    if (level === 'hard') timeLimit = 3000;
+
+    document.getElementById(level).classList.add('active');
+    startRound();
+}
+
+function startRound() {
+    clearTimeout(timer);
+    current = rand0to9();
+    add = rand1to9();
+
+    document.getElementById("current").textContent = current;
+    document.getElementById("add").textContent = add;
+
+    startTimer();
+}
+
+function startTimer() {
+    const bar = document.getElementById("timerBar");
+    bar.style.transition = "none";
+    bar.style.width = "100%";
+
+    setTimeout(() => {
+        bar.style.transition = `width ${timeLimit}ms linear`;
+        bar.style.width = "0%";
+    }, 50);
+
+    timer = setTimeout(() => {
+        fail();
+    }, timeLimit);
+}
+
+function answer(value) {
+    clearTimeout(timer);
+
+    const correct = (current + add) % 10;
+    const game = document.getElementById("game");
+
+    if (value === correct) {
+        score++;
+        streak++;
+        maxStreak = Math.max(maxStreak, streak);
+        current = correct;
+        game.classList.add("correct");
+        setTimeout(() => game.classList.remove("correct"), 300);
+    } else {
+        fail();
+        return;
     }
 
-    function updateUI() {
-        document.getElementById("current").textContent = current;
-        document.getElementById("add").textContent = add;
-        document.getElementById("answer").value = "";
-        document.getElementById("answer").focus();
-    }
+    updateStats();
+    startRound();
+}
 
-    function check() {
-        const userAnswer = parseInt(document.getElementById("answer").value);
-        if (isNaN(userAnswer)) return;
+function fail() {
+    const game = document.getElementById("game");
+    game.classList.add("wrong");
+    setTimeout(() => game.classList.remove("wrong"), 400);
+    streak = 0;
+    current = rand0to9();
+    updateStats();
+    startRound();
+}
 
-        let correct = current + add;
-        if (correct > 10) {
-            correct = correct - 10;
-        }
+function updateStats() {
+    document.getElementById("score").textContent = score;
+    document.getElementById("streak").textContent = streak;
+    document.getElementById("maxStreak").textContent = maxStreak;
+}
 
-        if (userAnswer === correct) {
-            score++;
-            document.getElementById("result").textContent = "✅ Correcto";
-            current = correct;
-        } else {
-            document.getElementById("result").textContent =
-                `❌ Incorrecto (era ${correct})`;
-            current = randomNumber();
-        }
-
-        add = randomNumber();
-        document.getElementById("score").textContent = score;
-        updateUI();
-    }
-
-    // Enter para confirmar
-    document.getElementById("answer").addEventListener("keyup", function (e) {
-        if (e.key === "Enter") check();
-    });
+// Nivel por defecto
+setLevel('easy');
 </script>
 
 </body>
