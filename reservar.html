@@ -341,7 +341,7 @@ body{background:var(--parch);color:var(--ink);font-family:'Outfit',sans-serif;fo
         </div>
         <div style="overflow-x:auto">
           <table class="tbl">
-            <thead><tr><th>Fila</th><th>Estado</th><th>Huésped</th><th>Cédula</th><th>Hab.</th><th>Hotel</th><th>Entrada</th><th>Salida</th><th>Total</th><th>Detalle</th></tr></thead>
+            <thead><tr><th>Fila</th><th>Estado</th><th>Huésped</th><th>Cédula</th><th>Hab.</th><th>Hotel</th><th>Entrada</th><th>Salida</th><th>Noches</th><th>Total</th><th>Detalle</th></tr></thead>
             <tbody id="csv-tbody"></tbody>
           </table>
         </div>
@@ -434,9 +434,16 @@ const byId=(arr,id,f)=>arr.find(x=>String(x[f])===String(id));
 const stars=n=>'★'.repeat(Number(n)||0);
 const v=id=>document.getElementById(id)?.value?.trim()||'';
 function nextId(arr,field){if(!arr.length)return 1;return Math.max(...arr.map(r=>Number(r[field])||0))+1;}
+function diffNoches(ini,fin){
+  return Math.max(1,Math.round((new Date(fin)-new Date(ini))/(1000*60*60*24)));
+}
+
 function getTempForDates(ini,fin){return db.temp.find(t=>new Date(t.Fecha_inicio_temporada)<=new Date(fin)&&new Date(t.Fecha_fin_temporada)>=new Date(ini))||null;}
 function isOcupada(habId,ini,fin){return db.lista.some(l=>String(l.Id_habitacion)===String(habId)&&new Date(l.Fecha_inicio)<new Date(fin)&&new Date(l.Fecha_fin)>new Date(ini));}
 const isAgencia=u=>String(u.Bool_agencia)==='true'||u.Bool_agencia===true;
+
+// Noches entre dos fechas — mínimo 1
+function diffNoches(ini,fin){return Math.max(1,Math.round((new Date(fin)-new Date(ini))/(1000*60*60*24)));}
 
 function loginLookup(){
   clearTimeout(loginTimer);
@@ -522,16 +529,17 @@ function renderResults(habs,ini,fin){
   const area=document.getElementById('results-area');
   if(!habs.length){area.innerHTML='<div class="state-box"><span class="state-ico">😔</span><div class="state-title">Sin habitaciones disponibles</div><div class="state-sub">Prueba con otras fechas o filtros.</div></div>';return;}
   const temp=getTempForDates(ini,fin);
-  area.innerHTML='<div class="results-hdr"><div class="results-title">Habitaciones disponibles</div><div class="results-count">'+habs.length+' resultado'+(habs.length!==1?'s':'')+' · '+ini+' → '+fin+'</div></div><div class="rooms-grid">'+habs.map(h=>roomCard(h,temp)).join('')+'</div>';
+  const noches=diffNoches(ini,fin);
+  area.innerHTML='<div class="results-hdr"><div class="results-title">Habitaciones disponibles</div><div class="results-count">'+habs.length+' resultado'+(habs.length!==1?'s':'')+' · '+ini+' → '+fin+' · <strong>'+noches+' noche'+(noches!==1?'s':'')+'</strong></div></div><div class="rooms-grid">'+habs.map(h=>roomCard(h,temp,noches)).join('')+'</div>';
 }
 
-function roomCard(h,temp){
+function roomCard(h,temp,noches){
   const hotel=byId(db.hotel,h.Id_hotel,'Id_hotel');
   const tipo=byId(db.tipo,h.Id_tipo_habitacion,'Id_tipo_habitacion');
   const cat=hotel?byId(db.cat,hotel.Id_categoria,'Id_categoria'):null;
   const base=Number(h.Precio_habitacion)||0;
   const mul=temp?Number(temp.Multiplicador)||1:1;
-  const final=Math.round(base*mul*100)/100;
+  const final=Math.round(base*mul*noches*100)/100;
   const sel=selectedRooms.some(r=>String(r.habId)===String(h.Id_habitacion));
   return '<div class="room-card '+(sel?'selected':'')+'" id="rc-'+h.Id_habitacion+'">'
     +'<div class="rc-top"><div class="rc-num">'+h.Numero_habitacion+'</div>'
@@ -540,13 +548,16 @@ function roomCard(h,temp){
     +'<div class="rc-body"><div class="rc-cat">'+(cat?stars(cat.Estrellas)+' '+cat.Nombre_categoria:'—')+'</div>'
     +(temp?'<div class="temp-chip">🗓 '+temp.Nombre_temporada+' · ×'+temp.Multiplicador+'</div>':'')
     +'<div class="price-row">'+(temp&&mul!==1?'<span class="price-base">'+fmt(base)+'</span>':'')
-    +'<span class="price-final">'+fmt(final)+'</span><span class="price-unit">/ unidad</span></div>'
-    +(temp?'<div style="font-family:\'DM Mono\',monospace;font-size:0.6rem;color:var(--muted)">'+fmt(base)+' × '+mul+' = '+fmt(final)+'</div>':'')
+    +'<span class="price-final">'+fmt(final)+'</span><span class="price-unit">total</span></div>'
+    +'<div style="font-family:\'DM Mono\',monospace;font-size:0.6rem;color:var(--muted)">'+fmt(base)+' × '+mul+(noches>1?' × '+noches+' noches':'')+' = '+fmt(final)+'</div>'
     +'</div><div class="rc-foot"><button class="btn-sel" onclick="toggleRoom(\''+h.Id_habitacion+'\',\''+(temp?temp.Id_temporada:'')+'\',\''+base+'\',\''+mul+'\',\''+final+'\',\''+(tipo?tipo.Nombre_tipo:'')+'\',\''+(hotel?hotel.Nombre:'')+'\',\''+h.Numero_habitacion+'\')">'
     +(sel?'✓ Seleccionada':'Seleccionar')+'</button></div></div>';
 }
 
 function toggleRoom(habId,tempId,precioBase,mul,precioFinal,tipo,hotel,num){
+  // recalcular con noches por si acaso se cambió fecha después de cargar
+  const noches=diffNoches(v('f-ini'),v('f-fin'));
+  precioFinal=Math.round(Number(precioBase)*Number(mul)*noches*100)/100;
   const idx=selectedRooms.findIndex(r=>String(r.habId)===String(habId));
   if(idx>=0)selectedRooms.splice(idx,1);
   else selectedRooms.push({habId,tempId,precioBase:Number(precioBase),mul:Number(mul),precioFinal:Number(precioFinal),tipo,hotel,num});
@@ -624,11 +635,13 @@ function buildResumen(){
   const ini=v('f-ini'),fin=v('f-fin'),total=selectedRooms.reduce((s,r)=>s+r.precioFinal,0);
   document.getElementById('r-habs').innerHTML=selectedRooms.map(r=>'<div class="res-row"><span>🚪 Hab.'+r.num+' · '+r.hotel+' <span class="badge bm">'+r.tipo+'</span></span><span class="res-val">'+fmt(r.precioFinal)+'</span></div>').join('');
   const nombre=foundHuesped?foundHuesped.Nombre:(v('b-nom')||'—');
+  const noches=diffNoches(ini,fin);
   document.getElementById('r-info').innerHTML=
     '<div class="res-row"><span class="res-lbl">Reservado por</span><span class="res-val">'+currentUser.Nombre+(isAgencia(currentUser)?' (Agencia)':'')+'</span></div>'+
     '<div class="res-row"><span class="res-lbl">Huésped</span><span class="res-val">'+nombre+' · '+v('b-ced')+'</span></div>'+
     '<div class="res-row"><span class="res-lbl">Entrada</span><span class="res-val">'+ini+'</span></div>'+
     '<div class="res-row"><span class="res-lbl">Salida</span><span class="res-val">'+fin+'</span></div>'+
+    '<div class="res-row"><span class="res-lbl">Noches</span><span class="res-val">'+noches+'</span></div>'+
     '<div class="res-row"><span class="res-lbl">Habitaciones</span><span class="res-val">'+selectedRooms.length+'</span></div>';
   document.getElementById('r-total-val').textContent=fmt(total);
 }
@@ -734,7 +747,7 @@ async function processCSVRow(row){
   const cedula=row['cedula_huesped']||'',nombre=row['nombre_huesped']||'',telefono=row['telefono_huesped']||'';
   const numHab=row['numero_habitacion']||'',idHotel=row['id_hotel']||'';
   const ini=row['fecha_inicio']||'',fin=row['fecha_fin']||'';
-  if(!cedula||!numHab||!idHotel||!ini||!fin)return{row,status:'skip',msg:'Campos obligatorios faltantes',total:0,hotel:'—'};
+  if(!cedula||!numHab||!idHotel||!ini||!fin)return{row,status:'skip',msg:'Campos obligatorios faltantes',total:0,noches:0,hotel:'—'};
   if(isNaN(Date.parse(ini))||isNaN(Date.parse(fin))||new Date(fin)<=new Date(ini))return{row,status:'error',msg:'Fechas inválidas (YYYY-MM-DD, fin > inicio)',total:0,hotel:'—'};
   const hab=db.hab.find(h=>String(h.Numero_habitacion)===String(numHab)&&String(h.Id_hotel)===String(idHotel));
   if(!hab)return{row,status:'error',msg:'Habitación '+numHab+' no existe en hotel '+idHotel,total:0,hotel:'—'};
@@ -743,7 +756,9 @@ async function processCSVRow(row){
   const temp=getTempForDates(ini,fin);
   const base=Number(hab.Precio_habitacion)||0;
   const mul=temp?Number(temp.Multiplicador)||1:1;
-  const total=Math.round(base*mul*100)/100;
+  const noches=diffNoches(ini,fin);
+  // precio_base × multiplicador × noches
+  const total=Math.round(base*mul*noches*100)/100;
   try{
     let personaId;
     const perExist=db.per.find(p=>String(p.Cedula)===cedula);
@@ -760,7 +775,7 @@ async function processCSVRow(row){
     const listId=nextId(db.lista,'Id_lista_reserva');
     await apiPost({action:'append',sheet:SHEETS.lista,row:[listId,hab.Id_habitacion,resId,temp?temp.Id_temporada:'',base,mul,ini,fin]});
     db.lista.push({Id_lista_reserva:listId,Id_habitacion:hab.Id_habitacion,Id_reserva:resId,Fecha_inicio:ini,Fecha_fin:fin});
-    return{row,status:'ok',msg:'Reserva #'+String(resId).padStart(4,'0'),total,hotel:hotelNom,resId};
+    return{row,status:'ok',msg:'Reserva #'+String(resId).padStart(4,'0')+' · '+noches+' noche'+(noches!==1?'s':''),total,noches,hotel:hotelNom,resId};
   }catch(e){return{row,status:'error',msg:e.message,total,hotel:hotelNom};}
 }
 
@@ -780,6 +795,7 @@ function renderCSVResults(results,ok,err,skip){
       +'<td style="font-size:0.75rem">'+(r.hotel||'—')+'</td>'
       +'<td style="font-family:\'DM Mono\',monospace;font-size:0.65rem">'+(r.row['fecha_inicio']||'—')+'</td>'
       +'<td style="font-family:\'DM Mono\',monospace;font-size:0.65rem">'+(r.row['fecha_fin']||'—')+'</td>'
+      +'<td style="font-family:\'DM Mono\',monospace;font-size:0.7rem;color:var(--gold-dk)">'+(r.noches||'—')+'</td>'
       +'<td style="font-family:\'Cormorant Garamond\',serif;font-size:0.95rem;color:var(--gold-dk)">'+(r.total?fmt(r.total):'—')+'</td>'
       +'<td class="'+(r.status==='ok'?'ok-msg':'err-msg')+'">'+(r.msg||'')+'</td></tr>';
   }).join('');
