@@ -1,0 +1,1182 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>RECOLECTA — Animación del Flujo</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#0d1117; font-family:'Segoe UI',sans-serif; overflow:hidden; width:1280px; height:720px; }
+
+/* ── SCENE CONTAINER ── */
+#scene { width:1280px; height:720px; position:relative; overflow:hidden; }
+
+/* ── SKY / BACKGROUND ── */
+.sky {
+  position:absolute; inset:0;
+  background: linear-gradient(180deg, #1a3a5c 0%, #2d6a9f 40%, #5ba3d0 70%, #7ec8e3 100%);
+}
+.ground {
+  position:absolute; bottom:0; left:0; right:0; height:280px;
+  background: linear-gradient(180deg, #4a7c3f 0%, #3d6b34 30%, #2d5228 100%);
+}
+.road {
+  position:absolute; bottom:0; left:0; right:0; height:120px;
+  background: #2c2c2c;
+}
+.road-line {
+  position:absolute; bottom:52px; height:10px; width:120px;
+  background:#f5c518; border-radius:4px;
+  animation: roadLines 1.2s linear infinite;
+}
+@keyframes roadLines {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-200px); }
+}
+
+/* Road line copies */
+.road-line:nth-child(1) { left:0; }
+.road-line:nth-child(2) { left:200px; }
+.road-line:nth-child(3) { left:400px; }
+.road-line:nth-child(4) { left:600px; }
+.road-line:nth-child(5) { left:800px; }
+.road-line:nth-child(6) { left:1000px; }
+.road-line:nth-child(7) { left:1200px; }
+
+/* ── CLOUDS ── */
+.cloud {
+  position:absolute; background:rgba(255,255,255,0.85);
+  border-radius:50px;
+}
+.cloud::before, .cloud::after {
+  content:''; position:absolute; background:rgba(255,255,255,0.85); border-radius:50%;
+}
+.c1 { width:120px; height:40px; top:60px; left:100px; animation: cloudMove 18s linear infinite; }
+.c1::before { width:60px; height:60px; top:-30px; left:20px; }
+.c1::after { width:45px; height:45px; top:-20px; left:60px; }
+.c2 { width:90px; height:32px; top:100px; left:500px; animation: cloudMove 25s linear infinite; }
+.c2::before { width:50px; height:50px; top:-25px; left:15px; }
+.c2::after { width:38px; height:38px; top:-18px; left:48px; }
+.c3 { width:100px; height:36px; top:45px; left:900px; animation: cloudMove 20s linear infinite; }
+.c3::before { width:55px; height:55px; top:-28px; left:18px; }
+.c3::after { width:40px; height:40px; top:-18px; left:52px; }
+@keyframes cloudMove {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-1400px); }
+}
+
+/* ── TREES ── */
+.tree {
+  position:absolute; bottom:115px;
+  animation: treeMove 4s linear infinite;
+}
+.tree-trunk { width:14px; height:40px; background:#5d3a1a; margin:0 auto; }
+.tree-top {
+  width:0; height:0;
+  border-left:30px solid transparent;
+  border-right:30px solid transparent;
+  border-bottom:60px solid #2d6b2d;
+  margin:0 auto;
+}
+.tree-top2 {
+  width:0; height:0;
+  border-left:22px solid transparent;
+  border-right:22px solid transparent;
+  border-bottom:48px solid #3d8b3d;
+  margin:0 auto; margin-top:-20px;
+}
+.t1 { left:200px; transform:scale(0.9); }
+.t2 { left:450px; transform:scale(1.1); }
+.t3 { left:700px; transform:scale(0.8); }
+.t4 { left:950px; transform:scale(1.0); }
+.t5 { left:1150px; transform:scale(1.2); }
+@keyframes treeMove {
+  from { transform: translateX(0) scale(var(--s,1)); }
+  to   { transform: translateX(-200px) scale(var(--s,1)); }
+}
+/* override scale in move */
+.t1 { animation: treeMove1 4s linear infinite; }
+.t2 { animation: treeMove2 4s linear infinite; }
+.t3 { animation: treeMove3 4s linear infinite; }
+.t4 { animation: treeMove4 4s linear infinite; }
+.t5 { animation: treeMove5 4s linear infinite; }
+@keyframes treeMove1 { from{transform:translateX(0) scale(0.9)} to{transform:translateX(-200px) scale(0.9)} }
+@keyframes treeMove2 { from{transform:translateX(0) scale(1.1)} to{transform:translateX(-200px) scale(1.1)} }
+@keyframes treeMove3 { from{transform:translateX(0) scale(0.8)} to{transform:translateX(-200px) scale(0.8)} }
+@keyframes treeMove4 { from{transform:translateX(0) scale(1.0)} to{transform:translateX(-200px) scale(1.0)} }
+@keyframes treeMove5 { from{transform:translateX(0) scale(1.2)} to{transform:translateX(-200px) scale(1.2)} }
+
+/* ── MOUNTAINS ── */
+.mountains {
+  position:absolute; bottom:240px; left:0; right:0; height:200px;
+  animation: mtMove 8s linear infinite;
+}
+.mt { position:absolute; bottom:0; }
+.mt::before { content:''; position:absolute; bottom:0; left:0; width:0; height:0; }
+.mt1::before { border-left:200px solid transparent; border-right:200px solid transparent; border-bottom:180px solid #3a5a8a; left:-200px; }
+.mt2::before { border-left:180px solid transparent; border-right:180px solid transparent; border-bottom:150px solid #4a6a9a; left:100px; }
+.mt3::before { border-left:160px solid transparent; border-right:160px solid transparent; border-bottom:160px solid #2a4a7a; left:380px; }
+.mt4::before { border-left:200px solid transparent; border-right:200px solid transparent; border-bottom:140px solid #3a5a8a; left:650px; }
+.mt5::before { border-left:150px solid transparent; border-right:150px solid transparent; border-bottom:170px solid #4a6a9a; left:900px; }
+@keyframes mtMove { from{transform:translateX(0)} to{transform:translateX(-200px)} }
+
+/* ── TRUCK ── */
+#truck {
+  position:absolute;
+  bottom:118px;
+  left:-320px;
+  transition: none;
+  animation: truckDrive 6s ease-out forwards;
+  filter: drop-shadow(4px 4px 8px rgba(0,0,0,0.5));
+}
+@keyframes truckDrive {
+  0%   { left:-320px; }
+  60%  { left:280px; }
+  80%  { left:260px; }
+  100% { left:270px; }
+}
+
+.truck-body {
+  width:260px; height:100px;
+  background: linear-gradient(180deg, #2d8a4e 0%, #1f6b3a 100%);
+  border-radius:6px 6px 0 0;
+  position:relative;
+}
+.truck-cargo {
+  width:260px; height:70px;
+  background: linear-gradient(180deg, #245f38 0%, #1a4a2a 100%);
+  border-radius:4px;
+  position:relative;
+  border:2px solid #1a3a22;
+}
+.cargo-lines {
+  position:absolute; inset:0;
+  background: repeating-linear-gradient(90deg, transparent, transparent 28px, rgba(0,0,0,0.2) 28px, rgba(0,0,0,0.2) 30px);
+  border-radius:4px;
+}
+.truck-cab {
+  width:110px; height:95px;
+  background: linear-gradient(180deg, #1f6b3a 0%, #154d2a 100%);
+  position:absolute;
+  right:-110px; bottom:0;
+  border-radius:0 8px 0 0;
+}
+.cab-window {
+  width:75px; height:45px;
+  background: linear-gradient(135deg, #87ceeb 0%, #b0e0ff 50%, #7ab8d8 100%);
+  border-radius:4px 6px 0 0;
+  position:absolute;
+  top:10px; right:8px;
+  border:3px solid #0d4a2a;
+  overflow:hidden;
+}
+.cab-window::after {
+  content:'';
+  position:absolute;
+  top:5px; left:5px;
+  width:20px; height:30px;
+  background:rgba(255,255,255,0.3);
+  border-radius:2px;
+  transform:skewX(-10deg);
+}
+.cab-stripe {
+  width:100%; height:12px;
+  background:#f5c518;
+  position:absolute; bottom:0; left:0;
+}
+.truck-exhaust {
+  width:12px; height:30px;
+  background:#555;
+  position:absolute;
+  top:-28px; left:20px;
+  border-radius:3px 3px 0 0;
+}
+.exhaust-smoke {
+  position:absolute;
+  top:-8px; left:50%;
+  transform:translateX(-50%);
+  animation: smoke 0.8s ease-out infinite;
+}
+.smoke-puff {
+  width:14px; height:14px;
+  background:rgba(180,180,180,0.7);
+  border-radius:50%;
+  position:absolute;
+  animation: smokeFade 0.8s ease-out forwards;
+}
+@keyframes smoke {
+  0%   { opacity:1; transform:translateX(-50%) translateY(0) scale(0.5); }
+  100% { opacity:0; transform:translateX(-50%) translateY(-30px) scale(1.5); }
+}
+@keyframes smokeFade {
+  0%   { opacity:0.8; transform:scale(0.5) translateY(0); }
+  100% { opacity:0; transform:scale(2) translateY(-20px); }
+}
+
+.wheel {
+  width:58px; height:58px;
+  background: radial-gradient(circle at 30% 30%, #555, #111);
+  border-radius:50%;
+  border:6px solid #333;
+  position:absolute;
+  bottom:-28px;
+  animation: wheelSpin 0.4s linear infinite;
+}
+.wheel::after {
+  content:'';
+  position:absolute;
+  top:50%; left:50%;
+  transform:translate(-50%,-50%);
+  width:18px; height:18px;
+  background:#888;
+  border-radius:50%;
+  border:3px solid #aaa;
+}
+.wheel-front { right:8px; }
+.wheel-back  { left:10px; }
+.wheel-mid   { left:100px; }
+@keyframes wheelSpin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* ── PORTERÍA BUILDING ── */
+#porteria {
+  position:absolute;
+  bottom:118px;
+  right:-400px;
+  animation: porteriaSlideIn 2s ease-out 1.5s forwards;
+  filter: drop-shadow(-6px 0 12px rgba(0,0,0,0.4));
+}
+@keyframes porteriaSlideIn {
+  from { right:-400px; }
+  to   { right:80px; }
+}
+
+.building-base {
+  width:280px; height:220px;
+  background: linear-gradient(180deg, #e8d5b0 0%, #d4b896 100%);
+  position:relative;
+  border-radius:4px 4px 0 0;
+}
+.building-roof {
+  width:300px; height:30px;
+  background: linear-gradient(180deg, #c0392b 0%, #962d22 100%);
+  position:absolute; top:-30px; left:-10px;
+  border-radius:4px 4px 0 0;
+}
+.building-sign {
+  width:200px;
+  background:#1a3a1a;
+  color:#4ade80;
+  font-size:11px;
+  font-weight:700;
+  text-align:center;
+  padding:5px;
+  border-radius:3px;
+  position:absolute;
+  top:18px; left:40px;
+  letter-spacing:1px;
+  box-shadow:0 0 8px rgba(74,222,128,0.4);
+}
+.building-window {
+  width:55px; height:65px;
+  background: linear-gradient(135deg, #87ceeb 30%, #b0e0ff 100%);
+  border:4px solid #8b6914;
+  border-radius:3px;
+  position:absolute;
+}
+.bw1 { top:60px; left:30px; }
+.bw2 { top:60px; left:110px; }
+.bw3 { top:60px; right:30px; }
+.building-door {
+  width:60px; height:90px;
+  background: linear-gradient(180deg, #6b3a1f 0%, #4a2210 100%);
+  border:4px solid #3a1a08;
+  border-radius:4px 4px 0 0;
+  position:absolute;
+  bottom:0;
+  left:50%;
+  transform:translateX(-50%);
+}
+.door-handle {
+  width:8px; height:8px;
+  background:#f5c518;
+  border-radius:50%;
+  position:absolute;
+  top:50%; left:10px;
+}
+
+/* ── GATE / BARRIER ── */
+#gate {
+  position:absolute;
+  bottom:118px;
+  right:380px;
+  animation: gateSlideIn 2s ease-out 1.5s forwards;
+}
+@keyframes gateSlideIn {
+  from { right:280px; opacity:0; }
+  to   { right:380px; opacity:1; }
+}
+.gate-post {
+  width:16px; height:80px;
+  background: linear-gradient(180deg, #888 0%, #555 100%);
+  border-radius:3px;
+}
+.gate-arm {
+  width:160px; height:16px;
+  background: repeating-linear-gradient(90deg, #e74c3c 0px, #e74c3c 20px, #fff 20px, #fff 40px);
+  border-radius:0 4px 4px 0;
+  position:absolute;
+  top:10px; left:16px;
+  transform-origin: left center;
+  animation: gateOpen 1s ease-out 4.5s forwards;
+  border:2px solid #c0392b;
+}
+@keyframes gateOpen {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(-80deg); }
+}
+
+/* ── HUD PANEL (screen mockup) ── */
+#hud {
+  position:absolute;
+  top:20px; right:20px;
+  width:340px;
+  background:rgba(13,18,30,0.95);
+  border:1px solid #2d4a6b;
+  border-radius:12px;
+  padding:16px;
+  opacity:0;
+  transform:translateY(-20px);
+  animation: hudAppear 0.8s ease-out 2.5s forwards;
+  backdrop-filter:blur(8px);
+  box-shadow:0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(45,74,107,0.5);
+}
+@keyframes hudAppear {
+  to { opacity:1; transform:translateY(0); }
+}
+.hud-bar {
+  display:flex; align-items:center; gap:6px;
+  margin-bottom:12px; padding-bottom:10px;
+  border-bottom:1px solid #1e3a5f;
+}
+.hud-dot { width:10px; height:10px; border-radius:50%; }
+.hud-title {
+  font-size:11px; color:#60a5fa; font-weight:700;
+  letter-spacing:1px; margin-left:4px;
+}
+.hud-field {
+  margin-bottom:10px;
+}
+.hud-label {
+  font-size:9px; color:#6b7280; font-weight:600;
+  letter-spacing:1px; margin-bottom:3px;
+  text-transform:uppercase;
+}
+.hud-value {
+  font-size:13px; color:#e2e8f0; font-weight:500;
+  background:#111827; padding:6px 10px;
+  border-radius:6px; border:1px solid #1e3a5f;
+  min-height:30px;
+  display:flex; align-items:center;
+}
+.hud-value.typing { border-color:#3b82f6; box-shadow:0 0 0 2px rgba(59,130,246,0.2); }
+.hud-value.success { border-color:#16a34a; background:#0d2818; color:#4ade80; }
+.hud-value.highlight { color:#fbbf24; font-weight:700; font-size:15px; }
+
+.cursor {
+  display:inline-block; width:2px; height:14px;
+  background:#60a5fa; margin-left:2px;
+  animation:blink 0.7s step-end infinite;
+  vertical-align:middle;
+}
+@keyframes blink { 50%{opacity:0} }
+
+.hud-status {
+  display:flex; align-items:center; gap:8px;
+  background:#0d1f0d; border:1px solid #166534;
+  border-radius:6px; padding:8px 10px; margin-top:10px;
+}
+.status-dot { width:8px; height:8px; border-radius:50%; background:#22c55e; animation:pulse 1.5s infinite; }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.6;transform:scale(1.2)} }
+.status-text { font-size:11px; color:#4ade80; font-weight:600; }
+
+/* ── SCENE LABEL ── */
+#scene-label {
+  position:absolute;
+  bottom:130px; left:50%;
+  transform:translateX(-50%);
+  background:rgba(0,0,0,0.7);
+  color:#fbbf24;
+  font-size:14px; font-weight:700;
+  padding:8px 20px;
+  border-radius:20px;
+  border:1px solid rgba(251,191,36,0.4);
+  opacity:0;
+  animation:labelPop 0.5s ease-out 6s forwards;
+  white-space:nowrap;
+  letter-spacing:0.5px;
+}
+@keyframes labelPop {
+  from{opacity:0;transform:translateX(-50%) scale(0.8)}
+  to{opacity:1;transform:translateX(-50%) scale(1)}
+}
+
+/* ── SCENE CONTROLS ── */
+#controls {
+  position:absolute;
+  bottom:12px;
+  left:50%;
+  transform:translateX(-50%);
+  display:flex; gap:10px; align-items:center;
+}
+.scene-btn {
+  background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2);
+  color:white; padding:6px 16px; border-radius:20px;
+  cursor:pointer; font-size:12px; font-weight:600;
+  transition:all 0.2s;
+}
+.scene-btn:hover { background:rgba(255,255,255,0.25); }
+.scene-btn.active { background:#2563eb; border-color:#3b82f6; }
+
+.scene-indicator {
+  display:flex; gap:6px;
+}
+.scene-dot {
+  width:8px; height:8px; border-radius:50%;
+  background:rgba(255,255,255,0.3);
+  cursor:pointer; transition:all 0.2s;
+}
+.scene-dot.active { background:#fbbf24; transform:scale(1.3); }
+
+/* ── SCENE TITLE OVERLAY ── */
+#scene-title {
+  position:absolute;
+  top:0; left:0; right:0;
+  background:linear-gradient(180deg, rgba(0,0,0,0.7) 0%, transparent 100%);
+  padding:16px 24px;
+  display:flex; align-items:center; gap:12px;
+}
+.scene-num {
+  background:#2563eb;
+  color:white; font-size:11px; font-weight:700;
+  padding:3px 10px; border-radius:12px; letter-spacing:1px;
+}
+.scene-name {
+  color:white; font-size:14px; font-weight:600;
+  letter-spacing:0.3px;
+}
+
+/* ── WEIGHING SCENE ── */
+#scale {
+  position:absolute;
+  bottom:118px;
+  left:50%;
+  transform:translateX(-50%);
+  opacity:0;
+  transition:opacity 0.5s;
+}
+.scale-platform {
+  width:500px; height:18px;
+  background:linear-gradient(180deg, #666 0%, #333 100%);
+  border-radius:4px;
+  box-shadow:0 4px 12px rgba(0,0,0,0.5);
+}
+.scale-base {
+  width:480px; height:80px;
+  background:linear-gradient(180deg, #444 0%, #222 100%);
+  margin:0 auto;
+  display:flex; align-items:center; justify-content:center;
+  border-radius:0 0 8px 8px;
+}
+.scale-display {
+  width:160px;
+  background:#0d1117;
+  border:2px solid #3b82f6;
+  border-radius:8px;
+  padding:10px 14px;
+  text-align:center;
+  box-shadow:0 0 20px rgba(59,130,246,0.3);
+}
+.scale-display-label { font-size:9px; color:#6b7280; letter-spacing:2px; margin-bottom:4px; }
+.scale-display-value { font-size:28px; font-weight:700; color:#fbbf24; font-family:monospace; }
+.scale-display-unit  { font-size:11px; color:#6b7280; }
+
+/* ── CELDA ASSIGNMENT SCENE ── */
+#celda-scene {
+  position:absolute;
+  inset:0;
+  background:#0d1117;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity 0.8s;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:40px;
+}
+.celda-grid {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+  width:420px;
+}
+.celda-card {
+  background:#111827;
+  border:2px solid #1f2937;
+  border-radius:10px;
+  padding:14px;
+  transition:all 0.4s;
+  position:relative;
+  overflow:hidden;
+}
+.celda-card.selected {
+  border-color:#22c55e;
+  background:#0d2818;
+  box-shadow:0 0 24px rgba(34,197,94,0.3);
+}
+.celda-card.rejected {
+  opacity:0.4;
+  filter:grayscale(1);
+}
+.celda-name { font-size:13px; font-weight:700; color:#e2e8f0; margin-bottom:4px; }
+.celda-type { font-size:10px; color:#6b7280; margin-bottom:8px; }
+.celda-bar-bg { height:8px; background:#1f2937; border-radius:4px; overflow:hidden; margin-bottom:4px; }
+.celda-bar-fill { height:100%; border-radius:4px; transition:width 0.6s ease; }
+.celda-pct { font-size:10px; color:#9ca3af; text-align:right; }
+.celda-badge {
+  position:absolute; top:8px; right:8px;
+  font-size:9px; font-weight:700; padding:2px 7px;
+  border-radius:10px; letter-spacing:0.5px;
+}
+.badge-ok   { background:rgba(34,197,94,0.15); color:#22c55e; border:1px solid #166534; }
+.badge-warn { background:rgba(234,179,8,0.15);  color:#ca8a04; border:1px solid #854d0e; }
+.badge-full { background:rgba(239,68,68,0.15);  color:#ef4444; border:1px solid #991b1b; }
+.check-icon {
+  position:absolute; bottom:10px; right:10px;
+  font-size:22px; opacity:0;
+  transition:opacity 0.4s 0.3s;
+}
+.celda-card.selected .check-icon { opacity:1; }
+
+.arrow-indicator {
+  font-size:40px; color:#fbbf24;
+  animation:arrowPulse 0.8s ease-in-out infinite;
+  opacity:0; transition:opacity 0.4s;
+}
+@keyframes arrowPulse { 0%,100%{transform:translateX(0)} 50%{transform:translateX(8px)} }
+
+.celda-result {
+  width:300px;
+  background:#0d2818;
+  border:2px solid #22c55e;
+  border-radius:12px;
+  padding:20px;
+  box-shadow:0 0 32px rgba(34,197,94,0.2);
+  opacity:0; transform:scale(0.9);
+  transition:all 0.5s;
+}
+.celda-result.show { opacity:1; transform:scale(1); }
+.cr-title { font-size:11px; color:#4ade80; font-weight:700; letter-spacing:2px; margin-bottom:10px; }
+.cr-name  { font-size:24px; font-weight:700; color:white; margin-bottom:6px; }
+.cr-type  { font-size:13px; color:#9ca3af; margin-bottom:14px; }
+.cr-stat  { display:flex; justify-content:space-between; font-size:12px; padding:6px 0; border-top:1px solid #166534; }
+.cr-stat-l { color:#6b7280; }
+.cr-stat-r { color:#4ade80; font-weight:600; }
+
+/* ── FINAL SCENE ── */
+#final-scene {
+  position:absolute;
+  inset:0;
+  background:linear-gradient(135deg, #0d2818 0%, #1a3a1a 50%, #0d2818 100%);
+  opacity:0;
+  pointer-events:none;
+  transition:opacity 0.8s;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+}
+.final-logo { font-size:52px; font-weight:900; color:white; letter-spacing:4px; }
+.final-sub  { font-size:18px; color:#4ade80; letter-spacing:2px; }
+.final-line { width:200px; height:3px; background:#fbbf24; border-radius:2px; margin:16px 0; }
+.final-stats {
+  display:flex; gap:40px; margin-top:10px;
+}
+.fstat { text-align:center; }
+.fstat-n { font-size:36px; font-weight:700; color:#4ade80; }
+.fstat-l { font-size:12px; color:#6b7280; letter-spacing:1px; margin-top:4px; }
+
+/* ── NOTIFICATION ── */
+.notif {
+  position:absolute;
+  top:20px; left:50%;
+  transform:translateX(-50%);
+  background:rgba(34,197,94,0.95);
+  color:#0d2818;
+  font-size:13px; font-weight:700;
+  padding:10px 24px;
+  border-radius:24px;
+  opacity:0;
+  pointer-events:none;
+  white-space:nowrap;
+  box-shadow:0 4px 20px rgba(34,197,94,0.4);
+}
+.notif.show {
+  animation:notifPop 3s ease forwards;
+}
+@keyframes notifPop {
+  0%  {opacity:0;transform:translateX(-50%) translateY(-10px)}
+  15% {opacity:1;transform:translateX(-50%) translateY(0)}
+  75% {opacity:1;transform:translateX(-50%) translateY(0)}
+  100%{opacity:0;transform:translateX(-50%) translateY(-10px)}
+}
+
+/* typing animation helper */
+.char { opacity:0; }
+</style>
+</head>
+<body>
+<div id="scene">
+
+  <!-- SHARED ENVIRONMENT -->
+  <div class="sky"></div>
+  <div class="mountains">
+    <div class="mt mt1"></div>
+    <div class="mt mt2"></div>
+    <div class="mt mt3"></div>
+    <div class="mt mt4"></div>
+    <div class="mt mt5"></div>
+  </div>
+  <div class="ground"></div>
+  <div class="road">
+    <div class="road-line"></div><div class="road-line"></div><div class="road-line"></div>
+    <div class="road-line"></div><div class="road-line"></div><div class="road-line"></div>
+    <div class="road-line"></div>
+  </div>
+  <div class="cloud c1"></div>
+  <div class="cloud c2"></div>
+  <div class="cloud c3"></div>
+
+  <div class="tree t1"><div class="tree-top"></div><div class="tree-top2"></div><div class="tree-trunk"></div></div>
+  <div class="tree t2"><div class="tree-top"></div><div class="tree-top2"></div><div class="tree-trunk"></div></div>
+  <div class="tree t3"><div class="tree-top"></div><div class="tree-top2"></div><div class="tree-trunk"></div></div>
+  <div class="tree t4"><div class="tree-top"></div><div class="tree-top2"></div><div class="tree-trunk"></div></div>
+  <div class="tree t5"><div class="tree-top"></div><div class="tree-top2"></div><div class="tree-trunk"></div></div>
+
+  <!-- TRUCK -->
+  <div id="truck">
+    <img src="truck-illustration-in-minimal-style-png.png" style="height:170px; width:auto;"> 
+  </div>
+
+  <!-- PORTERÍA -->
+  <div id="porteria">
+    <div style="position:relative">
+      <div class="building-base">
+        <div class="building-roof"></div>
+        <div class="building-sign">🏭 PORTERÍA PRINCIPAL</div>
+        <div class="building-window bw1"></div>
+        <div class="building-window bw2"></div>
+        <div class="building-window bw3"></div>
+        <div class="building-door"><div class="door-handle"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GATE -->
+  <div id="gate">
+    <div class="gate-post"></div>
+    <div class="gate-arm"></div>
+  </div>
+
+  <!-- SCALE (hidden initially) -->
+  <div id="scale">
+    <div class="scale-platform"></div>
+    <div class="scale-base">
+      <div class="scale-display">
+        <div class="scale-display-label">PESO BRUTO</div>
+        <div class="scale-display-value" id="weight-val">0</div>
+        <div class="scale-display-unit">kg</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CELDA ASSIGNMENT SCENE -->
+  <div id="celda-scene">
+    <div>
+      <div style="font-size:13px;color:#6b7280;letter-spacing:2px;text-transform:uppercase;margin-bottom:16px">Celdas disponibles para Domiciliario</div>
+      <div class="celda-grid">
+        <div class="celda-card" id="cc1">
+          <span class="celda-badge badge-ok">✓ DISPONIBLE</span>
+          <div class="celda-name">CELDA A</div>
+          <div class="celda-type">Domiciliario</div>
+          <div class="celda-bar-bg"><div class="celda-bar-fill" style="width:62%;background:#22c55e"></div></div>
+          <div class="celda-pct">62% llena</div>
+          <div class="check-icon">⭐</div>
+        </div>
+        <div class="celda-card" id="cc2">
+          <span class="celda-badge badge-warn">⚠ 88%</span>
+          <div class="celda-name">CELDA C</div>
+          <div class="celda-type">Domiciliario</div>
+          <div class="celda-bar-bg"><div class="celda-bar-fill" style="width:88%;background:#ca8a04"></div></div>
+          <div class="celda-pct">88% llena</div>
+        </div>
+        <div class="celda-card" id="cc3">
+          <span class="celda-badge badge-full">✗ LLENA</span>
+          <div class="celda-name">CELDA F</div>
+          <div class="celda-type">Domiciliario</div>
+          <div class="celda-bar-bg"><div class="celda-bar-fill" style="width:98%;background:#ef4444"></div></div>
+          <div class="celda-pct">98% llena</div>
+        </div>
+        <div class="celda-card" id="cc4" style="border-color:#374151;opacity:0.5">
+          <span class="celda-badge" style="background:rgba(100,100,100,0.2);color:#6b7280;border-color:#374151">✗ TIPO</span>
+          <div class="celda-name">CELDA D</div>
+          <div class="celda-type" style="color:#ef4444">Biomédico ❌</div>
+          <div class="celda-bar-bg"><div class="celda-bar-fill" style="width:30%;background:#6b7280"></div></div>
+          <div class="celda-pct">30% llena</div>
+        </div>
+      </div>
+    </div>
+    <div class="arrow-indicator" id="celda-arrow">→</div>
+    <div class="celda-result" id="celda-result">
+      <div class="cr-title">🎯 CELDA ASIGNADA</div>
+      <div class="cr-name">CELDA A</div>
+      <div class="cr-type">Domiciliario · Capacidad: 10.000 kg</div>
+      <div class="cr-stat"><span class="cr-stat-l">Peso acumulado</span><span class="cr-stat-r">6.200 kg</span></div>
+      <div class="cr-stat"><span class="cr-stat-l">Disponible</span><span class="cr-stat-r">3.800 kg ✓</span></div>
+      <div class="cr-stat"><span class="cr-stat-l">Ocupación</span><span class="cr-stat-r">62% — ÓPTIMA</span></div>
+      <div style="margin-top:12px;background:#166534;border-radius:6px;padding:8px;text-align:center;font-size:12px;color:#4ade80;font-weight:700">
+        ✅ DIRÍGASE A CELDA A
+      </div>
+    </div>
+  </div>
+
+  <!-- FINAL SCENE -->
+  <div id="final-scene">
+    <div class="final-logo">RECOLECTA</div>
+    <div class="final-sub">E . S . P</div>
+    <div class="final-line"></div>
+    <div class="final-stats">
+      <div class="fstat"><div class="fstat-n" id="fs1">0</div><div class="fstat-l">INGRESOS/DÍA</div></div>
+      <div class="fstat"><div class="fstat-n" id="fs2">0</div><div class="fstat-l">CELDAS ACTIVAS</div></div>
+      <div class="fstat"><div class="fstat-n" id="fs3">0</div><div class="fstat-l">KG PROCESADOS</div></div>
+    </div>
+    <div style="margin-top:24px;font-size:13px;color:#4ade80;opacity:0.7;letter-spacing:2px">Sistema de Gestión de Residuos Sólidos · Colombia</div>
+  </div>
+
+  <!-- HUD (system screen mockup) -->
+  <div id="hud">
+    <div class="hud-bar">
+      <div class="hud-dot" style="background:#ef4444"></div>
+      <div class="hud-dot" style="background:#f59e0b"></div>
+      <div class="hud-dot" style="background:#22c55e"></div>
+      <span class="hud-title" id="hud-title">REGISTRAR INGRESO</span>
+    </div>
+    <div class="hud-field">
+      <div class="hud-label" id="hud-l1">CÉDULA CONDUCTOR</div>
+      <div class="hud-value" id="hud-v1"><span id="hud-v1-text"></span><span class="cursor" id="cur1"></span></div>
+    </div>
+    <div class="hud-field">
+      <div class="hud-label" id="hud-l2">PLACA VEHÍCULO</div>
+      <div class="hud-value" id="hud-v2"><span id="hud-v2-text"></span><span class="cursor" id="cur2" style="display:none"></span></div>
+    </div>
+    <div class="hud-field">
+      <div class="hud-label" id="hud-l3">PESO BRUTO (kg)</div>
+      <div class="hud-value" id="hud-v3"><span id="hud-v3-text"></span><span class="cursor" id="cur3" style="display:none"></span></div>
+    </div>
+    <div class="hud-status" id="hud-status" style="opacity:0;transition:opacity 0.5s">
+      <div class="status-dot"></div>
+      <span class="status-text" id="status-text">Esperando datos...</span>
+    </div>
+  </div>
+
+  <!-- Scene title -->
+  <div id="scene-title">
+    <span class="scene-num" id="snum">ESCENA 1</span>
+    <span class="scene-name" id="sname">Camión llegando al centro de disposición</span>
+  </div>
+
+  <!-- Label -->
+ 
+
+  <!-- Notification -->
+  <div class="notif" id="notif"></div>
+
+  <!-- Controls -->
+  <div id="controls">
+    <button class="scene-btn" id="btn-prev" onclick="prevScene()">◀ Anterior</button>
+    <div class="scene-indicator">
+      <div class="scene-dot active" onclick="goScene(0)"></div>
+      <div class="scene-dot" onclick="goScene(1)"></div>
+      <div class="scene-dot" onclick="goScene(2)"></div>
+      <div class="scene-dot" onclick="goScene(3)"></div>
+      <div class="scene-dot" onclick="goScene(4)"></div>
+      <div class="scene-dot" onclick="goScene(5)"></div>
+    </div>
+    <button class="scene-btn" id="btn-next" onclick="nextScene()">Siguiente ▶</button>
+    <button class="scene-btn" onclick="toggleAuto()" id="btn-auto">▶ Auto</button>
+  </div>
+</div>
+
+<script>
+let currentScene = 0;
+let autoPlay = false;
+let autoTimer = null;
+let typingTimers = [];
+
+const scenes = [
+  { num:"ESCENA 1", name:"Camión llegando al centro de disposición" },
+  { num:"ESCENA 2", name:"Conductor se identifica — cédula y placa" },
+  { num:"ESCENA 3", name:"Pesaje en báscula — cálculo de peso neto" },
+  { num:"ESCENA 4", name:"Sistema asigna la celda óptima automáticamente" },
+  { num:"ESCENA 5", name:"Ingreso confirmado — camión descarga" },
+  { num:"FIN",       name:"RECOLECTA E.S.P — Sistema en operación" },
+];
+
+function clearTyping() {
+  typingTimers.forEach(t => clearTimeout(t));
+  typingTimers = [];
+}
+
+function typeText(elId, text, delay=0, speed=80, cb) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  el.textContent = '';
+  let i = 0;
+  function next() {
+    if (i < text.length) {
+      el.textContent += text[i++];
+      typingTimers.push(setTimeout(next, speed + Math.random()*40));
+    } else { if(cb) cb(); }
+  }
+  typingTimers.push(setTimeout(next, delay));
+}
+
+function notify(msg) {
+  const n = document.getElementById('notif');
+  n.textContent = msg;
+  n.classList.remove('show');
+  void n.offsetWidth;
+  n.classList.add('show');
+}
+
+// ── SCENE SETUPS ──────────────────────────────────────────────────────────────
+
+function setupScene0() {
+  clearTyping();
+  // Driving scene
+  document.getElementById('truck').style.animation = 'none';
+  document.getElementById('truck').style.left = '-320px';
+  void document.getElementById('truck').offsetWidth;
+  document.getElementById('truck').style.animation = 'truckDrive 6s ease-out forwards';
+
+  document.getElementById('porteria').style.animation = 'none';
+  document.getElementById('porteria').style.right = '-400px';
+  void document.getElementById('porteria').offsetWidth;
+  document.getElementById('porteria').style.animation = 'porteriaSlideIn 2s ease-out 1.5s forwards';
+
+  document.getElementById('gate').style.animation = 'none';
+  void document.getElementById('gate').offsetWidth;
+  document.getElementById('gate').style.animation = 'gateSlideIn 2s ease-out 1.5s forwards';
+  document.querySelector('.gate-arm').style.animation = 'none';
+  void document.querySelector('.gate-arm').offsetWidth;
+
+  document.getElementById('hud').style.animation = 'none';
+  document.getElementById('hud').style.opacity = '0';
+  void document.getElementById('hud').offsetWidth;
+  document.getElementById('hud').style.animation = 'hudAppear 0.8s ease-out 2.5s forwards';
+
+  document.getElementById('hud-title').textContent = 'REGISTRAR INGRESO';
+  document.getElementById('hud-l1').textContent = 'CÉDULA CONDUCTOR';
+  document.getElementById('hud-v1').className = 'hud-value';
+  document.getElementById('hud-v1-text').textContent = '';
+  document.getElementById('hud-v2-text').textContent = '';
+  document.getElementById('hud-v3-text').textContent = '';
+  document.getElementById('hud-status').style.opacity = '0';
+  document.getElementById('cur1').style.display = 'inline-block';
+  document.getElementById('cur2').style.display = 'none';
+  document.getElementById('cur3').style.display = 'none';
+
+  document.getElementById('scale').style.opacity = '0';
+  document.getElementById('celda-scene').style.opacity = '0';
+  document.getElementById('celda-scene').style.pointerEvents = 'none';
+  document.getElementById('final-scene').style.opacity = '0';
+  document.getElementById('final-scene').style.pointerEvents = 'none';
+
+  // Road + trees moving
+  setEnvMoving(true);
+
+  // Gate opens when truck arrives
+  typingTimers.push(setTimeout(() => {
+    document.querySelector('.gate-arm').style.animation = 'none';
+    void document.querySelector('.gate-arm').offsetWidth;
+    document.querySelector('.gate-arm').style.animation = 'gateOpen 1s ease-out forwards';
+    notify('🚛 Vehículo identificado — barrera abierta');
+  }, 5000));
+}
+
+function setupScene1() {
+  clearTyping();
+  setEnvMoving(false);
+
+  document.getElementById('truck').style.animation = 'none';
+  document.getElementById('truck').style.left = '270px';
+  document.getElementById('porteria').style.animation = 'none';
+  document.getElementById('porteria').style.right = '80px';
+  document.getElementById('gate').style.animation = 'none';
+
+  document.getElementById('scale').style.opacity = '0';
+  document.getElementById('celda-scene').style.opacity = '0';
+  document.getElementById('celda-scene').style.pointerEvents = 'none';
+  document.getElementById('final-scene').style.opacity = '0';
+  document.getElementById('final-scene').style.pointerEvents = 'none';
+
+  document.getElementById('hud').style.animation = 'none';
+  document.getElementById('hud').style.opacity = '1';
+  document.getElementById('hud').style.transform = 'translateY(0)';
+  document.getElementById('hud-title').textContent = 'PASO 1 — CONDUCTOR';
+  document.getElementById('hud-l1').textContent = 'CÉDULA DEL CONDUCTOR';
+  document.getElementById('hud-v1').className = 'hud-value typing';
+  document.getElementById('hud-v1-text').textContent = '';
+  document.getElementById('hud-v2-text').textContent = '';
+  document.getElementById('hud-v3-text').textContent = '';
+  document.getElementById('hud-status').style.opacity = '0';
+  document.getElementById('cur1').style.display = 'inline-block';
+  document.getElementById('cur2').style.display = 'none';
+  document.getElementById('cur3').style.display = 'none';
+
+  typeText('hud-v1-text', '12345678', 600, 90, () => {
+    document.getElementById('cur1').style.display = 'none';
+    document.getElementById('hud-v1').className = 'hud-value success';
+    typingTimers.push(setTimeout(() => {
+      document.getElementById('hud-status').style.opacity = '1';
+      document.getElementById('status-text').textContent = '✓ Carlos Ramírez — TransResiduos S.A.';
+      notify('✓ Conductor encontrado: Carlos Ramírez Gómez');
+
+      // Now type plate
+      typingTimers.push(setTimeout(() => {
+        document.getElementById('hud-l2').textContent = 'PLACA VEHÍCULO';
+        document.getElementById('hud-v2').className = 'hud-value typing';
+        document.getElementById('cur2').style.display = 'inline-block';
+        typeText('hud-v2-text', 'ABC-123', 200, 110, () => {
+          document.getElementById('cur2').style.display = 'none';
+          document.getElementById('hud-v2').className = 'hud-value success';
+          typingTimers.push(setTimeout(()=>notify('✓ Vehículo: Kenworth T800 — Tara: 8.500 kg'), 300));
+        });
+      }, 1800));
+    }, 600));
+  });
+}
+
+function setupScene2() {
+  clearTyping();
+  setEnvMoving(false);
+
+  document.getElementById('truck').style.animation = 'none';
+  document.getElementById('truck').style.left = '180px';
+  document.getElementById('scale').style.opacity = '1';
+  document.getElementById('celda-scene').style.opacity = '0';
+  document.getElementById('celda-scene').style.pointerEvents = 'none';
+  document.getElementById('final-scene').style.opacity = '0';
+  document.getElementById('final-scene').style.pointerEvents = 'none';
+
+  document.getElementById('hud').style.opacity = '1';
+  document.getElementById('hud-title').textContent = 'PASO 3 — PESAJE';
+  document.getElementById('hud-v1').className = 'hud-value success';
+  document.getElementById('hud-v1-text').textContent = '12345678';
+  document.getElementById('hud-v2').className = 'hud-value success';
+  document.getElementById('hud-v2-text').textContent = 'ABC-123';
+  document.getElementById('hud-v3').className = 'hud-value typing';
+  document.getElementById('cur3').style.display = 'inline-block';
+  document.getElementById('cur1').style.display = 'none';
+  document.getElementById('cur2').style.display = 'none';
+  document.getElementById('hud-status').style.opacity = '0';
+
+  // Count up weight
+  let w = 0; const target = 12500;
+  const wEl = document.getElementById('weight-val');
+  wEl.textContent = '0';
+  const step = () => {
+    w = Math.min(w + Math.floor(Math.random()*400)+200, target);
+    wEl.textContent = w.toLocaleString('es-CO');
+    if (w < target) typingTimers.push(setTimeout(step, 80));
+    else {
+      // Type in HUD
+      typingTimers.push(setTimeout(() => {
+        typeText('hud-v3-text', '12500', 0, 100, () => {
+          document.getElementById('cur3').style.display = 'none';
+          document.getElementById('hud-v3').className = 'hud-value highlight';
+          document.getElementById('hud-status').style.opacity = '1';
+          document.getElementById('status-text').textContent = '⚖️ Peso neto: 4.000 kg (bruto − tara)';
+          notify('⚖️ Peso neto calculado: 4.000 kg');
+        });
+      }, 500));
+    }
+  };
+  typingTimers.push(setTimeout(step, 800));
+}
+
+function setupScene3() {
+  clearTyping();
+  setEnvMoving(false);
+  document.getElementById('scale').style.opacity = '0';
+  document.getElementById('truck').style.animation = 'none';
+  document.getElementById('truck').style.left = '-400px';
+  document.getElementById('final-scene').style.opacity = '0';
+  document.getElementById('final-scene').style.pointerEvents = 'none';
+  document.getElementById('hud').style.opacity = '0';
+
+  const cs = document.getElementById('celda-scene');
+  cs.style.opacity = '1';
+  cs.style.pointerEvents = 'auto';
+
+  // Reset cards
+  ['cc1','cc2','cc3','cc4'].forEach(id => {
+    document.getElementById(id).classList.remove('selected','rejected');
+  });
+  document.getElementById('celda-arrow').style.opacity = '0';
+  document.getElementById('celda-result').classList.remove('show');
+
+  // Animate selection
+  typingTimers.push(setTimeout(() => {
+    document.getElementById('cc2').classList.add('rejected');
+    document.getElementById('cc3').classList.add('rejected');
+    document.getElementById('cc4').classList.add('rejected');
+  }, 1000));
+  typingTimers.push(setTimeout(() => {
+    document.getElementById('cc1').classList.add('selected');
+    document.getElementById('celda-arrow').style.opacity = '1';
+  }, 2000));
+  typingTimers.push(setTimeout(() => {
+    document.getElementById('celda-result').classList.add('show');
+    notify('🎯 Sistema asigna CELDA A — menor ocupación: 62%');
+  }, 2800));
+}
+
+function setupScene4() {
+  clearTyping();
+  setEnvMoving(true);
+  document.getElementById('celda-scene').style.opacity = '0';
+  document.getElementById('celda-scene').style.pointerEvents = 'none';
+  document.getElementById('scale').style.opacity = '0';
+  document.getElementById('final-scene').style.opacity = '0';
+  document.getElementById('final-scene').style.pointerEvents = 'none';
+
+  // Truck drives into celda (right to left, backing)
+  document.getElementById('truck').style.animation = 'none';
+  document.getElementById('truck').style.left = '1400px';
+  document.getElementById('truck').style.transform = 'scaleX(-1)';
+  void document.getElementById('truck').offsetWidth;
+  document.getElementById('truck').style.transition = 'left 3s ease-out';
+  typingTimers.push(setTimeout(() => {
+    document.getElementById('truck').style.left = '650px';
+    typingTimers.push(setTimeout(() => {
+      document.getElementById('truck').style.transition = '';
+      notify('🏭 Camión descargando en CELDA A — 4.000 kg');
+    }, 3100));
+  }, 100));
+
+  document.getElementById('hud').style.opacity = '1';
+  document.getElementById('hud-title').textContent = '✅ INGRESO CONFIRMADO';
+  document.getElementById('hud-v1').className = 'hud-value success';
+  document.getElementById('hud-v1-text').textContent = '#1042 · 2026-03-20 08:34';
+  document.getElementById('hud-l1').textContent = 'INGRESO N°';
+  document.getElementById('hud-l2').textContent = 'CELDA ASIGNADA';
+  document.getElementById('hud-v2').className = 'hud-value success';
+  document.getElementById('hud-v2-text').textContent = 'CELDA A — Domiciliario';
+  document.getElementById('hud-l3').textContent = 'PESO NETO DESCARGADO';
+  document.getElementById('hud-v3').className = 'hud-value highlight';
+  document.getElementById('hud-v3-text').textContent = '4.000 kg';
+  document.getElementById('hud-status').style.opacity = '1';
+  document.getElementById('status-text').textContent = '🗃️ Ingreso guardado en base de datos';
+}
+
+function setupScene5() {
+  clearTyping();
+  setEnvMoving(false);
+  document.getElementById('truck').style.animation = 'none';
+  document.getElementById('truck').style.left = '-400px';
+  document.getElementById('truck').style.transform = 'scaleX(1)';
+  document.getElementById('scale').style.opacity = '0';
+  document.getElementById('celda-scene').style.opacity = '0';
+  document.getElementById('celda-scene').style.pointerEvents = 'none';
+  document.getElementById('hud').style.opacity = '0';
+
+  const fs = document.getElementById('final-scene');
+  fs.style.opacity = '1';
+  fs.style.pointerEvents = 'auto';
+
+  // Count up stats
+  function countUp(elId, target, suffix='', duration=2000) {
+    const el = document.getElementById(elId);
+    let start = 0; const step = target/60;
+    const t = setInterval(() => {
+      start = Math.min(start+step, target);
+      el.textContent = Math.floor(start).toLocaleString('es-CO') + suffix;
+      if (start >= target) clearInterval(t);
+    }, duration/60);
+    typingTimers.push(t);
+  }
+  typingTimers.push(setTimeout(() => {
+    countUp('fs1', 48, '');
+    countUp('fs2', 5, '');
+    countUp('fs3', 4800, ' kg');
+  }, 500));
+}
+
+function setEnvMoving(on) {
+  const speed = on ? '' : 'paused';
+  document.querySelectorAll('.road-line,.tree,.cloud,.mountains').forEach(el => {
+    el.style.animationPlayState = on ? 'running' : 'paused';
+  });
+  document.querySelectorAll('.wheel').forEach(el => {
+    el.style.animationPlayState = on ? 'running' : 'paused';
+  });
+  document.querySelectorAll('.exhaust-smoke,.smoke-puff').forEach(el => {
+    el.style.animationPlayState = on ? 'running' : 'paused';
+  });
+}
+
+const sceneSetups = [setupScene0, setupScene1, setupScene2, setupScene3, setupScene4, setupScene5];
+
+function goScene(n) {
+  currentScene = Math.max(0, Math.min(n, scenes.length-1));
+  document.getElementById('snum').textContent = scenes[currentScene].num;
+  document.getElementById('sname').textContent = scenes[currentScene].name;
+  document.querySelectorAll('.scene-dot').forEach((d,i) => d.classList.toggle('active', i===currentScene));
+  sceneSetups[currentScene]();
+}
+
+function nextScene() {
+  if (currentScene < scenes.length-1) goScene(currentScene+1);
+}
+function prevScene() {
+  if (currentScene > 0) goScene(currentScene-1);
+}
+
+function toggleAuto() {
+  autoPlay = !autoPlay;
+  document.getElementById('btn-auto').textContent = autoPlay ? '⏸ Pausar' : '▶ Auto';
+  document.getElementById('btn-auto').classList.toggle('active', autoPlay);
+  if (autoPlay) {
+    autoTimer = setInterval(() => {
+      if (currentScene < scenes.length-1) nextScene();
+      else { goScene(0); }
+    }, 7000);
+  } else {
+    clearInterval(autoTimer);
+  }
+}
+
+// Keyboard navigation
+document.addEventListener('keydown', e => {
+  if (e.key==='ArrowRight'||e.key===' ') nextScene();
+  if (e.key==='ArrowLeft') prevScene();
+});
+
+// Init
+goScene(0);
+</script>
+</body>
+</html>

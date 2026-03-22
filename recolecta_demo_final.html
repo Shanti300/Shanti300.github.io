@@ -1,0 +1,3186 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RECOLECTA E.S.P — Sistema de Gestión</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+/* ============================================================
+   VARIABLES & RESET
+============================================================ */
+:root {
+  --bg:       #f5f6fa;
+  --bg2:      #ffffff;
+  --bg3:      #f0f2f8;
+  --surface:  #f8f9fc;
+  --border:   #e2e6f0;
+  --border2:  #ccd0de;
+  --primary:  #2563eb;
+  --primary2: #1d4ed8;
+  --primary-light: #eff6ff;
+  --success:  #16a34a;
+  --success-light: #f0fdf4;
+  --success-border: #bbf7d0;
+  --warn:     #d97706;
+  --warn-light: #fffbeb;
+  --warn-border: #fde68a;
+  --danger:   #dc2626;
+  --danger-light: #fef2f2;
+  --danger-border: #fecaca;
+  --text:     #111827;
+  --text2:    #6b7280;
+  --text3:    #9ca3af;
+  --mono:     'IBM Plex Mono', monospace;
+  --sans:     'Inter', sans-serif;
+  --r:        8px;
+  --r2:       12px;
+  --shadow:   0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.05);
+  --shadow2:  0 4px 12px rgba(0,0,0,.1);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 14px; overflow: hidden; }
+
+/* ── LAYOUT ── */
+#app { display: flex; flex-direction: column; height: 100vh; }
+#topbar {
+  display: flex; align-items: center; gap: 12px;
+  padding: 0 24px; height: 52px;
+  background: var(--bg2); border-bottom: 1px solid var(--border);
+  flex-shrink: 0; box-shadow: var(--shadow);
+}
+#topbar .logo { font-family: var(--mono); font-size: 14px; font-weight: 600; color: var(--primary); letter-spacing: 1px; }
+#topbar .sep { width: 1px; height: 20px; background: var(--border); }
+#topbar .rol-badge {
+  font-size: 11px; font-weight: 500; color: var(--primary);
+  background: var(--primary-light); border: 1px solid #bfdbfe;
+  padding: 3px 10px; border-radius: 20px;
+}
+#topbar .user-info { font-size: 13px; color: var(--text2); font-weight: 500; }
+#topbar .spacer { flex: 1; }
+#topbar #btn-logout {
+  font-size: 12px; font-weight: 500; color: var(--text2);
+  background: none; border: 1px solid var(--border);
+  padding: 5px 14px; border-radius: var(--r); cursor: pointer; transition: all .2s;
+}
+#topbar #btn-logout:hover { color: var(--danger); border-color: var(--danger); background: var(--danger-light); }
+
+#main { display: flex; flex: 1; overflow: hidden; }
+
+/* ── NAV ── */
+#nav {
+  width: 216px; flex-shrink: 0;
+  background: var(--bg2); border-right: 1px solid var(--border);
+  overflow-y: auto; padding: 16px 8px;
+}
+#nav .nav-section {
+  font-size: 10px; font-weight: 600; color: var(--text3);
+  padding: 8px 12px 6px; letter-spacing: 1px; text-transform: uppercase;
+}
+#nav .nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 12px; cursor: pointer; color: var(--text2); font-size: 13px; font-weight: 500;
+  border-radius: var(--r); transition: all .15s; margin-bottom: 2px;
+}
+#nav .nav-item:hover { color: var(--text); background: var(--bg3); }
+#nav .nav-item.active { color: var(--primary); background: var(--primary-light); font-weight: 600; }
+#nav .nav-icon { width: 18px; text-align: center; font-size: 13px; color: inherit; }
+
+/* ── CONTENT ── */
+#content { flex: 1; overflow-y: auto; padding: 24px; position: relative; background: var(--bg); }
+
+/* ── ERD FLOTANTE ── */
+#erd-panel {
+  position: fixed; right: 20px; top: 70px;
+  width: 480px; height: 560px;
+  background: #0a1120; border: 1px solid #1e3050;
+  border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,.5);
+  display: none; flex-direction: column; z-index: 300;
+  resize: both; overflow: hidden; min-width: 340px; min-height: 340px;
+}
+#erd-panel.visible { display: flex; }
+#erd-panel .erd-title {
+  font-family: var(--mono); font-size: 10px; color: #4a7aaa;
+  padding: 10px 14px; border-bottom: 1px solid #1e3050;
+  letter-spacing: 1.5px; display: flex; align-items: center; gap: 8px;
+  cursor: move; user-select: none; flex-shrink: 0;
+  background: #0d1628; border-radius: 12px 12px 0 0;
+}
+#erd-panel .erd-title .dot { width: 6px; height: 6px; background: #3b82f6; border-radius: 50%; animation: pulse 2s infinite; }
+#erd-panel .erd-title .erd-label { flex:1; }
+#erd-panel .erd-title .erd-hint { font-size: 9px; color: #334d70; }
+#erd-panel .erd-close { background:none; border:none; color:#4a7aaa; cursor:pointer; font-size:14px; padding:2px 6px; border-radius:4px; }
+#erd-panel .erd-close:hover { background:#1e3050; color:#93c5fd; }
+#erd-panel .erd-toolbar { display:flex; align-items:center; gap:6px; padding:6px 10px; border-bottom:1px solid #1a2840; background:#0c1425; flex-shrink:0; }
+#erd-panel .erd-toolbar button { background:#1a2840; border:1px solid #1e3050; color:#4a7aaa; font-size:11px; padding:3px 10px; border-radius:4px; cursor:pointer; font-family:var(--mono); }
+#erd-panel .erd-toolbar button:hover { background:#1e3a5f; color:#93c5fd; }
+#erd-panel .erd-toolbar .zoom-val { font-family:var(--mono); font-size:10px; color:#4a7aaa; min-width:32px; text-align:center; }
+#erd-svg-wrap { flex: 1; overflow: auto; position: relative; background: #080f1e; cursor: grab; }
+#erd-svg-wrap:active { cursor: grabbing; }
+#erd-svg-inner { transform-origin: 0 0; transition: transform .1s; }
+#erd-log {
+  height: 80px; border-top: 1px solid #1a2840; flex-shrink:0;
+  overflow-y: auto; padding: 5px 10px; font-family: var(--mono); font-size: 9px;
+  color: #4a7aaa; background: #080f1e;
+}
+#erd-log .log-line { padding: 2px 0; }
+#erd-log .log-line.active { color: #60a5fa; }
+#erd-log .log-line.info { color: #93c5fd; }
+/* Botón ERD oculto — usar Ctrl+Shift+M */
+#erd-btn { display: none; }
+
+/* ── ERD SVG ── */
+.erd-table { transition: all .3s; cursor:pointer; }
+.erd-table rect.body { fill: #111d33; stroke: #1e3050; stroke-width: 1; }
+.erd-table rect.header { fill: #162040; stroke: #1e3050; stroke-width: 1; }
+.erd-table text.tname { fill: #5a8ab4; font-family: 'IBM Plex Mono', monospace; font-size: 6.5px; font-weight:600; }
+.erd-table text.field  { fill: #2e5070; font-family: 'IBM Plex Mono', monospace; font-size: 5.5px; }
+.erd-table text.field.pk { fill: #b45309; }
+.erd-table text.field.fk { fill: #7c3aed; }
+.erd-conn { stroke: #1e3050; stroke-width: .8; fill: none; transition: all .3s; }
+.erd-table.highlighted rect.body { fill: #0d1e3d; stroke: #3b82f6; stroke-width: 2; }
+.erd-table.highlighted rect.header { fill: #162860; stroke: #3b82f6; stroke-width: 2; }
+.erd-table.highlighted text.tname { fill: #60a5fa; }
+.erd-table.highlighted text.field  { fill: #7ab8e0; }
+.erd-conn.highlighted { stroke: #2563eb; stroke-width: 2; stroke-dasharray: 5 2; animation: dashflow .6s linear infinite; }
+
+/* ── LOGIN ── */
+#screen-login {
+  position: fixed; inset: 0;
+  background: linear-gradient(135deg, #eff6ff 0%, #f5f6fa 50%, #f0fdf4 100%);
+  display: flex; align-items: center; justify-content: center; z-index: 100;
+}
+#screen-login.hidden { display: none; }
+.login-box {
+  width: 380px; background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 16px; padding: 40px; box-shadow: var(--shadow2);
+}
+.login-brand { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+.login-brand-icon { width: 36px; height: 36px; background: var(--primary); border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+.login-brand-icon i { color: white; font-size: 16px; }
+.login-logo { font-family: var(--mono); font-size: 20px; font-weight: 600; color: var(--text); }
+.login-sub { font-size: 13px; color: var(--text2); margin-bottom: 32px; margin-top: 4px; }
+
+/* ── FORMS ── */
+.field { margin-bottom: 16px; }
+.field label { display: block; font-size: 12px; font-weight: 600; color: var(--text2); margin-bottom: 6px; }
+.field input, .field select, .field textarea {
+  width: 100%; background: var(--bg2); border: 1.5px solid var(--border); color: var(--text);
+  padding: 9px 12px; border-radius: var(--r); font-family: var(--sans); font-size: 13px;
+  transition: border-color .2s, box-shadow .2s; outline: none;
+}
+.field input:focus, .field select:focus, .field textarea:focus {
+  border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,.1);
+}
+.field select option { background: var(--bg2); }
+.field .field-hint { font-size: 11px; color: var(--text3); margin-top: 4px; }
+
+/* ── BUTTONS ── */
+.btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 8px 16px; border-radius: var(--r); font-family: var(--sans); font-size: 13px;
+  font-weight: 500; cursor: pointer; border: none; transition: all .2s;
+}
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-primary:hover { background: var(--primary2); box-shadow: 0 4px 12px rgba(37,99,235,.3); }
+.btn-secondary { background: var(--bg2); color: var(--text); border: 1.5px solid var(--border); }
+.btn-secondary:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
+.btn-danger { background: var(--danger-light); color: var(--danger); border: 1px solid var(--danger-border); }
+.btn-amber { background: var(--warn-light); color: var(--warn); border: 1px solid var(--warn-border); }
+.btn-success { background: var(--success-light); color: var(--success); border: 1px solid var(--success-border); }
+.btn-full { width: 100%; justify-content: center; }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+
+/* ── PAGE HEADER ── */
+.page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.page-title { font-size: 18px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 8px; }
+.page-title i { color: var(--primary); font-size: 16px; }
+.page-sub { font-size: 13px; color: var(--text2); margin-top: 3px; }
+
+/* ── TABLES ── */
+.table-wrap { overflow-x: auto; border-radius: var(--r2); border: 1px solid var(--border); background: var(--bg2); box-shadow: var(--shadow); }
+table { width: 100%; border-collapse: collapse; }
+thead tr { background: var(--surface); }
+th { font-size: 11px; font-weight: 600; color: var(--text2); padding: 10px 14px; text-align: left; letter-spacing: .3px; border-bottom: 1px solid var(--border); text-transform: uppercase; }
+td { padding: 10px 14px; font-size: 13px; border-bottom: 1px solid var(--border); color: var(--text); }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: var(--primary-light); }
+
+/* ── CARDS ── */
+.card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--r2); padding: 20px; box-shadow: var(--shadow); }
+.card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 14px; margin-bottom: 20px; }
+.stat-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--r2); padding: 16px; box-shadow: var(--shadow); }
+.stat-val { font-family: var(--mono); font-size: 26px; font-weight: 600; color: var(--primary); }
+.stat-label { font-size: 12px; color: var(--text2); margin-top: 3px; font-weight: 500; }
+
+/* ── BADGES ── */
+.badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+.badge-green { background: var(--success-light); color: var(--success); border: 1px solid var(--success-border); }
+.badge-amber { background: var(--warn-light); color: var(--warn); border: 1px solid var(--warn-border); }
+.badge-red { background: var(--danger-light); color: var(--danger); border: 1px solid var(--danger-border); }
+.badge-blue { background: var(--primary-light); color: var(--primary); border: 1px solid #bfdbfe; }
+.badge-gray { background: var(--bg3); color: var(--text2); border: 1px solid var(--border); }
+
+/* ── ALERTS ── */
+.alert { padding: 12px 16px; border-radius: var(--r); font-size: 13px; margin-bottom: 16px; display: flex; align-items: flex-start; gap: 8px; }
+.alert i { margin-top: 1px; flex-shrink: 0; }
+.alert-green { background: var(--success-light); border: 1px solid var(--success-border); color: var(--success); }
+.alert-red { background: var(--danger-light); border: 1px solid var(--danger-border); color: var(--danger); }
+.alert-amber { background: var(--warn-light); border: 1px solid var(--warn-border); color: var(--warn); }
+.alert-blue { background: var(--primary-light); border: 1px solid #bfdbfe; color: var(--primary); }
+
+/* ── PROGRESS ── */
+.progress { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 3px; transition: width .6s ease; }
+.progress-fill.low { background: var(--success); }
+.progress-fill.mid { background: var(--warn); }
+.progress-fill.high { background: var(--danger); }
+
+/* ── WIZARD ── */
+.wizard-steps { display: flex; gap: 0; margin-bottom: 24px; border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; background: var(--bg2); }
+.wizard-step {
+  flex: 1; text-align: center; padding: 10px 4px; font-size: 11px; font-weight: 500;
+  color: var(--text3); border-right: 1px solid var(--border); transition: all .3s;
+}
+.wizard-step:last-child { border-right: none; }
+.wizard-step.active { color: var(--primary); background: var(--primary-light); font-weight: 600; }
+.wizard-step.done { color: var(--success); background: var(--success-light); }
+
+/* ── TOAST ── */
+#toast {
+  position: fixed; bottom: 24px; right: 24px; z-index: 200;
+  font-size: 13px; font-weight: 500; padding: 12px 18px;
+  border-radius: var(--r); max-width: 320px; opacity: 0;
+  transition: opacity .3s, transform .3s; pointer-events: none;
+  transform: translateY(8px); box-shadow: var(--shadow2);
+}
+#toast.show { opacity: 1; transform: translateY(0); }
+#toast.success { background: var(--success-light); color: var(--success); border: 1px solid var(--success-border); }
+#toast.error { background: var(--danger-light); color: var(--danger); border: 1px solid var(--danger-border); }
+
+/* ── MODAL ── */
+.modal-overlay {
+  display: none; position: fixed; inset: 0; background: rgba(0,0,0,.4);
+  z-index: 150; align-items: center; justify-content: center;
+  backdrop-filter: blur(2px);
+}
+.modal-overlay.open { display: flex; }
+.modal-box {
+  background: var(--bg2); border: 1px solid var(--border); border-radius: 16px;
+  padding: 28px; min-width: 380px; max-width: 520px; width: 92%;
+  max-height: 90vh; overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,.15);
+  animation: fadein .2s ease;
+}
+.modal-title { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+.modal-title i { color: var(--primary); }
+.modal-footer { display: flex; gap: 8px; justify-content: flex-end; margin-top: 24px; border-top: 1px solid var(--border); padding-top: 16px; }
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text3); }
+
+/* ── RESPONSIVE ── */
+@media(max-width:768px){
+  #erd-panel { display: none !important; }
+  #nav { width: 52px; }
+  #nav .nav-item span { display: none; }
+  #nav .nav-section { display: none; }
+}
+
+@keyframes dashflow { to { stroke-dashoffset: -12; } }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+@keyframes fadein { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
+.fadein { animation: fadein .3s ease; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="screen-login">
+  <div class="login-box">
+    <div class="login-brand">
+      <div class="login-brand-icon"><i class="fa-solid fa-recycle"></i></div>
+      <div class="login-logo">RECOLECTA</div>
+    </div>
+    <div class="login-sub">E.S.P — Sistema de gestión de rellenos sanitarios</div>
+    <div class="field"><label>Usuario</label><input id="inp-user" type="text" placeholder="Ingresa tu usuario" autocomplete="off"></div>
+    <div class="field"><label>Contraseña</label><input id="inp-pass" type="password" placeholder="••••••••"></div>
+    <div id="login-error" class="alert alert-red" style="display:none"></div>
+    <button class="btn btn-primary btn-full" id="btn-login" style="padding:11px;font-size:14px">
+      <i class="fa-solid fa-right-to-bracket"></i> Iniciar sesión
+    </button>
+  </div>
+</div>
+
+<!-- APP SHELL -->
+<div id="app" style="display:none">
+  <!-- TOPBAR -->
+  <div id="topbar">
+    <div style="display:flex;align-items:center;gap:8px">
+      <div style="width:28px;height:28px;background:var(--primary);border-radius:6px;display:flex;align-items:center;justify-content:center">
+        <i class="fa-solid fa-recycle" style="color:white;font-size:12px"></i>
+      </div>
+      <div class="logo">RECOLECTA</div>
+    </div>
+    <div class="sep"></div>
+    <i class="fa-solid fa-user-circle" style="color:var(--text3);font-size:15px"></i>
+    <span class="user-info" id="top-user">—</span>
+    <span class="rol-badge" id="top-rol">—</span>
+    <div class="spacer"></div>
+    <button id="btn-logout"><i class="fa-solid fa-right-from-bracket"></i> Salir</button>
+  </div>
+
+  <div id="main">
+    <!-- NAV -->
+    <nav id="nav">
+      <!-- Rendered by JS -->
+    </nav>
+
+    <!-- CONTENT -->
+    <div id="content">
+      <!-- Screens injected here -->
+    </div>
+
+    <!-- ERD PANEL FLOTANTE -->
+    <div id="erd-panel">
+      <div class="erd-title" id="erd-drag-handle">
+        <div class="dot"></div>
+        <span class="erd-label">MODELO RELACIONAL — RECOLECTA E.S.P</span>
+        <span class="erd-hint">Ctrl+Shift+M</span>
+        <button class="erd-close" onclick="document.getElementById('erd-panel').classList.remove('visible')" title="Cerrar">✕</button>
+      </div>
+      <div class="erd-toolbar">
+        <button onclick="erdZoom(-0.15)">−</button>
+        <span class="zoom-val" id="erd-zoom-val">100%</span>
+        <button onclick="erdZoom(+0.15)">+</button>
+        <button onclick="erdZoomReset()">⟳ Reset</button>
+        <span style="flex:1"></span>
+        <span style="font-size:9px;color:#334d70;font-family:var(--mono)">Arrastra para mover · Rueda para zoom</span>
+      </div>
+      <div id="erd-svg-wrap"><div id="erd-svg-inner"></div></div>
+      <div id="erd-log"><div class="log-line info">// Ctrl+Shift+M para abrir · Clic en módulo para ver flujo</div></div>
+    </div>
+    <!-- Botón flotante -->
+    <button id="erd-btn" onclick="toggleERD()" title="Ver Modelo Relacional">⬡</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+<div id="modal-overlay" class="modal-overlay">
+  <div class="modal-box" id="modal-box"></div>
+</div>
+
+<script>
+// ============================================================
+// CONFIG — PEGA TU URL DE APPS SCRIPT AQUÍ
+// ============================================================
+
+// ============================================================
+// BASE DE DATOS EN MEMORIA — DEMO STANDALONE
+// ============================================================
+const DB = {
+  Rol: [
+    { id_rol:1, Nombre:'OPERARIO_PORTERIA',  Descripcion:'Acceso a ingreso' },
+    { id_rol:2, Nombre:'ADMIN_CELDAS',       Descripcion:'Celdas, contratistas, liquidacion' },
+    { id_rol:3, Nombre:'ADMIN_GENERAL',      Descripcion:'Usuarios, tarifas, multas, limites' },
+  ],
+  Usuario: [
+    { id_usuario:1, id_rol:1, Usuario:'portero',     Contrasena:'1234', Activo:1 },
+    { id_usuario:2, id_rol:2, Usuario:'admin_celda', Contrasena:'1234', Activo:1 },
+    { id_usuario:3, id_rol:3, Usuario:'admin',       Contrasena:'1234', Activo:1 },
+  ],
+  Tipo_residuo: [
+    { id_tipoResiduo:1, Nombre:'Domiciliario',  Descripcion:'Residuos del hogar' },
+    { id_tipoResiduo:2, Nombre:'Comercial',     Descripcion:'Residuos comerciales' },
+    { id_tipoResiduo:3, Nombre:'Biomedico',     Descripcion:'Residuos hospitalarios' },
+    { id_tipoResiduo:4, Nombre:'Industrial',    Descripcion:'Residuos industriales' },
+  ],
+  Unidad_medida: [
+    { id_unidadMedida:1, Nombre:'Kilogramo', Simbolo:'kg',  Factor_a_kg:1     },
+    { id_unidadMedida:2, Nombre:'Tonelada',  Simbolo:'ton', Factor_a_kg:1000  },
+  ],
+  Tipo_vehiculo: [
+    { id_tipoVehiculo:1, id_unidadMedida:1, Nombre:'Compactador', Descripcion:'',Capacidad_maxima:8000  },
+    { id_tipoVehiculo:2, id_unidadMedida:1, Nombre:'Volqueta',    Descripcion:'',Capacidad_maxima:12000 },
+    { id_tipoVehiculo:3, id_unidadMedida:1, Nombre:'Camion',      Descripcion:'',Capacidad_maxima:10000 },
+  ],
+  Departamento: [
+    { id_departamento:1, Nombre:'Valle del Cauca', Activo:1 },
+  ],
+  Municipio: [
+    { id_municipio:1, id_departamento:1, Nombre:'Palmira', Activo:1 },
+    { id_municipio:2, id_departamento:1, Nombre:'Cali',    Activo:1 },
+  ],
+  Centro_disposicion: [
+    { id_centro:1, id_municipio:1, Nombre:'Relleno Norte', Direccion:'Via principal km 5', Activo:1 },
+    { id_centro:2, id_municipio:2, Nombre:'Relleno Sur',   Direccion:'Carretera 23 km 8',  Activo:1 },
+  ],
+  Celda: [
+    { id_celda:1, id_centro:1, id_unidadMedida:1, Nombre:'Celda A-1', Capacidad_max:50000, Peso_acumulado:12000, Activo:1 },
+    { id_celda:2, id_centro:1, id_unidadMedida:1, Nombre:'Celda A-2', Capacidad_max:50000, Peso_acumulado:8000,  Activo:1 },
+    { id_celda:3, id_centro:1, id_unidadMedida:1, Nombre:'Celda B-1', Capacidad_max:20000, Peso_acumulado:5000,  Activo:1 },
+    { id_celda:4, id_centro:2, id_unidadMedida:1, Nombre:'Celda C-1', Capacidad_max:30000, Peso_acumulado:29000, Activo:1 },
+  ],
+  Celda_Tipo_residuo: [
+    { id_celdaResiduo:1, id_celda:1, id_tipoResiduo:1, Peso_acumulado:8000,  Activo:1 },
+    { id_celdaResiduo:2, id_celda:1, id_tipoResiduo:2, Peso_acumulado:4000,  Activo:1 },
+    { id_celdaResiduo:3, id_celda:2, id_tipoResiduo:1, Peso_acumulado:8000,  Activo:1 },
+    { id_celdaResiduo:4, id_celda:3, id_tipoResiduo:3, Peso_acumulado:5000,  Activo:1 },
+    { id_celdaResiduo:5, id_celda:4, id_tipoResiduo:2, Peso_acumulado:29000, Activo:1 },
+  ],
+  Contratista: [
+    { id_contratista:1, Razon_social:'Transportes Verdes S.A.S', NIT:'900123456-1', Nombre_contacto:'Carlos Ruiz',  Telefono:'3001234567', Activo:1 },
+    { id_contratista:2, Razon_social:'Logistica Ambiental Ltda', NIT:'800987654-2', Nombre_contacto:'Maria Gomez',  Telefono:'3109876543', Activo:1 },
+  ],
+  Vehiculo: [
+    { id_vehiculo:1, id_tipoVehiculo:1, id_contratista:1, Placa:'ABC-123', Modelo:'Compactador 2021', Tara:3500, Activo:1 },
+    { id_vehiculo:2, id_tipoVehiculo:2, id_contratista:1, Placa:'DEF-456', Modelo:'Volqueta 2020',    Tara:4200, Activo:1 },
+    { id_vehiculo:3, id_tipoVehiculo:3, id_contratista:2, Placa:'XYZ-789', Modelo:'Camion 2022',      Tara:3800, Activo:1 },
+  ],
+  Vehiculo_contratista: [
+    { id_vinculoContratista:1, id_contratista:1, id_vehiculo:1, Fecha_inicio:'2024-01-01', Fecha_fin:'', Activo:1 },
+    { id_vinculoContratista:2, id_contratista:1, id_vehiculo:2, Fecha_inicio:'2024-01-01', Fecha_fin:'', Activo:1 },
+    { id_vinculoContratista:3, id_contratista:2, id_vehiculo:3, Fecha_inicio:'2024-01-01', Fecha_fin:'', Activo:1 },
+  ],
+  Conductor: [
+    { id_conductor:1, id_contratista:1, Cedula:'12345678', Nombre:'Pedro Perez',  Telefono:'3001111111', Activo:1 },
+    { id_conductor:2, id_contratista:1, Cedula:'87654321', Nombre:'Luis Garzon',  Telefono:'3002222222', Activo:1 },
+    { id_conductor:3, id_contratista:2, Cedula:'11223344', Nombre:'Ana Torres',   Telefono:'3003333333', Activo:1 },
+  ],
+  Limite_autorizado: [
+    { id_limite:1, id_tipoVehiculo:1, id_tipoResiduo:1, Peso_max_kg:7000  },
+    { id_limite:2, id_tipoVehiculo:1, id_tipoResiduo:2, Peso_max_kg:7000  },
+    { id_limite:3, id_tipoVehiculo:2, id_tipoResiduo:1, Peso_max_kg:11000 },
+    { id_limite:4, id_tipoVehiculo:2, id_tipoResiduo:4, Peso_max_kg:10000 },
+    { id_limite:5, id_tipoVehiculo:3, id_tipoResiduo:2, Peso_max_kg:9000  },
+    { id_limite:6, id_tipoVehiculo:1, id_tipoResiduo:3, Peso_max_kg:4000  },
+  ],
+  Tarifa_cabecera: [
+    { id_tarifa:1, id_contratista:1, id_tipoResiduo:1, Activo:1 },
+    { id_tarifa:2, id_contratista:1, id_tipoResiduo:2, Activo:1 },
+    { id_tarifa:3, id_contratista:2, id_tipoResiduo:2, Activo:1 },
+    { id_tarifa:4, id_contratista:2, id_tipoResiduo:4, Activo:1 },
+  ],
+  Tarifa_detalle: [
+    { id_tarifaDetalle:1, id_tarifa:1, Valor_por_unidad:120, Fecha_inicio:'2025-01-01', Fecha_fin:'' },
+    { id_tarifaDetalle:2, id_tarifa:2, Valor_por_unidad:145, Fecha_inicio:'2025-01-01', Fecha_fin:'' },
+    { id_tarifaDetalle:3, id_tarifa:3, Valor_por_unidad:150, Fecha_inicio:'2025-01-01', Fecha_fin:'' },
+    { id_tarifaDetalle:4, id_tarifa:4, Valor_por_unidad:200, Fecha_inicio:'2025-01-01', Fecha_fin:'' },
+  ],
+  Multa_config: [
+    { id_multa:1, id_contratista:1, id_tipoResiduo:1, Minimo_kg:1,   Maximo_kg:500,  Valor_multa:100000 },
+    { id_multa:2, id_contratista:1, id_tipoResiduo:1, Minimo_kg:501, Maximo_kg:9999, Valor_multa:300000 },
+    { id_multa:3, id_contratista:2, id_tipoResiduo:2, Minimo_kg:1,   Maximo_kg:9999, Valor_multa:200000 },
+  ],
+  Ingreso: [
+    // Ingresos historicos (marzo 2025)
+    { id_ingreso:1, id_centro:1, id_vehiculo:1, id_conductor:1, id_tipoResiduo:1, id_usuario:1, id_limite:1, Fecha_hora:'2025-03-10 08:30:00', Peso_bruto:11000, Peso_neto:7500,  Sobrepeso:0, Cantidad_exceso:0,   Observaciones:'' },
+    { id_ingreso:2, id_centro:1, id_vehiculo:2, id_conductor:2, id_tipoResiduo:1, id_usuario:1, id_limite:3, Fecha_hora:'2025-03-10 10:15:00', Peso_bruto:15500, Peso_neto:11300, Sobrepeso:1, Cantidad_exceso:300, Observaciones:'Sobrepeso detectado' },
+    { id_ingreso:3, id_centro:1, id_vehiculo:1, id_conductor:1, id_tipoResiduo:2, id_usuario:1, id_limite:2, Fecha_hora:'2025-03-11 09:00:00', Peso_bruto:10200, Peso_neto:6700,  Sobrepeso:0, Cantidad_exceso:0,   Observaciones:'' },
+    { id_ingreso:4, id_centro:1, id_vehiculo:3, id_conductor:3, id_tipoResiduo:2, id_usuario:1, id_limite:5, Fecha_hora:'2025-03-12 11:30:00', Peso_bruto:13000, Peso_neto:9200,  Sobrepeso:1, Cantidad_exceso:200, Observaciones:'' },
+    // ESCENARIO LIQUIDACION — ingresos del mes actual (para demo de liquidacion)
+    { id_ingreso:5, id_centro:1, id_vehiculo:1, id_conductor:1, id_tipoResiduo:1, id_usuario:1, id_limite:1, Fecha_hora:'2026-03-05 08:00:00', Peso_bruto:10500, Peso_neto:7000,  Sobrepeso:0, Cantidad_exceso:0,   Observaciones:'Escenario demo' },
+    { id_ingreso:6, id_centro:1, id_vehiculo:1, id_conductor:1, id_tipoResiduo:1, id_usuario:1, id_limite:1, Fecha_hora:'2026-03-08 09:30:00', Peso_bruto:11500, Peso_neto:8000,  Sobrepeso:0, Cantidad_exceso:0,   Observaciones:'Escenario demo' },
+    { id_ingreso:7, id_centro:1, id_vehiculo:2, id_conductor:2, id_tipoResiduo:1, id_usuario:1, id_limite:3, Fecha_hora:'2026-03-10 11:00:00', Peso_bruto:15200, Peso_neto:11000, Sobrepeso:0, Cantidad_exceso:0,   Observaciones:'Escenario demo' },
+    { id_ingreso:8, id_centro:1, id_vehiculo:2, id_conductor:2, id_tipoResiduo:2, id_usuario:1, id_limite:3, Fecha_hora:'2026-03-12 08:45:00', Peso_bruto:16500, Peso_neto:12300, Sobrepeso:1, Cantidad_exceso:1300,Observaciones:'Sobrepeso escenario demo' },
+    { id_ingreso:9, id_centro:1, id_vehiculo:1, id_conductor:1, id_tipoResiduo:2, id_usuario:1, id_limite:2, Fecha_hora:'2026-03-15 10:00:00', Peso_bruto:10800, Peso_neto:7300,  Sobrepeso:1, Cantidad_exceso:300, Observaciones:'Leve sobrepeso demo' },
+  ],
+  Ingreso_celda: [
+    { id_ingresoCelda:1, id_celda:1, id_ingreso:1, Cantidad_descargada:7500  },
+    { id_ingresoCelda:2, id_celda:1, id_ingreso:2, Cantidad_descargada:8000  },
+    { id_ingresoCelda:3, id_celda:2, id_ingreso:2, Cantidad_descargada:3300  },
+    { id_ingresoCelda:4, id_celda:1, id_ingreso:3, Cantidad_descargada:4000  },
+    { id_ingresoCelda:5, id_celda:2, id_ingreso:4, Cantidad_descargada:5000  },
+    { id_ingresoCelda:6, id_celda:4, id_ingreso:4, Cantidad_descargada:4200  },
+  ],
+  Liquidacion: [
+    { id_liquidacion:1, id_contratista:1, Periodo_inicio:'2025-03-01', Periodo_fin:'2025-03-31', Total_peso:25500, Valor_transporte:3060000, Valor_multas:300000, Valor_total:2760000, Estado:'BORRADOR',  Fecha_generacion:'2025-04-01' },
+    { id_liquidacion:2, id_contratista:2, Periodo_inicio:'2025-02-01', Periodo_fin:'2025-02-28', Total_peso:18400, Valor_transporte:2760000, Valor_multas:200000, Valor_total:2560000, Estado:'APROBADA', Fecha_generacion:'2025-03-01' },
+    // Para generar liquidacion del mes actual: ve a Liquidaciones → selecciona Transportes Verdes + 2026-03-01 a 2026-03-31
+  ],
+  Detalle_liquidacion: [
+    { id_detalle:1, id_liquidacion:1, id_ingreso:1, Valor_transporte:900000,  Valor_multa:0,      Subtotal:900000  },
+    { id_detalle:2, id_liquidacion:1, id_ingreso:2, Valor_transporte:1356000, Valor_multa:300000, Subtotal:1056000 },
+    { id_detalle:3, id_liquidacion:1, id_ingreso:3, Valor_transporte:804000,  Valor_multa:0,      Subtotal:804000  },
+    { id_detalle:4, id_liquidacion:2, id_ingreso:4, Valor_transporte:1380000, Valor_multa:200000, Subtotal:1180000 },
+    // Nota: liquidacion del mes actual se genera desde el modulo Liquidaciones usando los ingresos 5-9
+  ],
+};
+
+// Auto-incremento de IDs
+function nextId(tabla) {
+  const rows = DB[tabla];
+  if (!rows || !rows.length) return 1;
+  const keys = Object.keys(rows[0]).filter(k => k.toLowerCase().startsWith('id_') && typeof rows[0][k] === 'number');
+  if (!keys.length) return rows.length + 1;
+  const pk = keys[0];
+  return Math.max(...rows.map(r => Number(r[pk]) || 0)) + 1;
+}
+
+// ============================================================
+// API — reemplaza las llamadas a Apps Script
+// ============================================================
+async function api(action, body = {}) {
+  // Simular delay de red
+  await new Promise(r => setTimeout(r, 180));
+  return apiFn(action, body);
+}
+
+function apiFn(action, body) {
+  switch (action) {
+
+    // AUTH
+    case 'login': {
+      const u = DB.Usuario.find(r =>
+        r.Usuario.toLowerCase() === String(body.usuario).toLowerCase() &&
+        String(r.Contrasena) === String(body.contrasena) && r.Activo
+      );
+      if (!u) throw new Error('Credenciales invalidas');
+      const rol = DB.Rol.find(r => r.id_rol === u.id_rol);
+      return { id_usuario: u.id_usuario, usuario: u.Usuario, rol: rol?.Nombre || 'SIN_ROL' };
+    }
+
+    // CONDUCTORES
+    case 'buscarConductor': {
+      const c = DB.Conductor.find(r => String(r.Cedula) === String(body.cedula) && r.Activo);
+      if (!c) throw new Error('Conductor no encontrado o no autorizado');
+      return c;
+    }
+
+    // VEHICULOS
+    case 'buscarVehiculo': {
+      const v = DB.Vehiculo.find(r => r.Placa.toUpperCase() === String(body.placa).toUpperCase() && r.Activo);
+      if (!v) throw new Error('Vehiculo no encontrado o inactivo');
+      const con = DB.Contratista.find(c => c.id_contratista === v.id_contratista);
+      return { ...v, contratista: con?.Razon_social || '' };
+    }
+
+    // CALCULAR DISTRIBUCION
+    case 'calcularDistribucion': {
+      const pn = Number(body.peso_neto);
+      const idTipo = Number(body.id_tipoResiduo);
+
+      const idCentro = body.id_centro ? Number(body.id_centro) : null;
+      // IDs de celdas autorizadas para este tipo (sin duplicados), filtradas por centro
+      const idsCeldas = [...new Set(
+        DB.Celda_Tipo_residuo
+          .filter(r => r.id_tipoResiduo === idTipo && r.Activo !== 0)
+          .map(r => r.id_celda)
+          .filter(idC => {
+            if (!idCentro) return true;
+            const cel = DB.Celda.find(c => c.id_celda === idC);
+            return cel && cel.id_centro === idCentro;
+          })
+      )];
+
+      if (!idsCeldas.length) throw new Error('No hay celdas autorizadas para ese tipo de residuo');
+
+      // Celdas elegibles: activas y con espacio
+      const elegibles = DB.Celda
+        .filter(c => idsCeldas.includes(c.id_celda) && c.Activo !== 0 && (c.Capacidad_max - c.Peso_acumulado) > 0)
+        .sort((a, b) => a.Peso_acumulado - b.Peso_acumulado);
+
+      if (!elegibles.length) throw new Error('Todas las celdas para ese tipo de residuo estan llenas');
+
+      // Distribuir
+      let restante = pn;
+      const distribucion = [];
+      for (const c of elegibles) {
+        if (restante <= 0) break;
+        const disp    = c.Capacidad_max - c.Peso_acumulado;
+        const asignar = Math.min(restante, disp);
+        distribucion.push({
+          id_celda:   c.id_celda,
+          nombre:     c.Nombre,
+          kg_asignar: asignar,
+          pct_actual: Math.round(c.Peso_acumulado / c.Capacidad_max * 100),
+          disponible: disp
+        });
+        restante -= asignar;
+      }
+      return { distribucion, restante, cubre_total: restante <= 0 };
+    }
+
+    // VERIFICAR LIMITE
+    case 'verificarLimite': {
+      const tv = DB.Vehiculo.find(v => v.id_vehiculo === Number(body.id_tipoVehiculo))?.id_tipoVehiculo;
+      const lim = DB.Limite_autorizado.find(l =>
+        l.id_tipoVehiculo === (tv || Number(body.id_tipoVehiculo)) &&
+        l.id_tipoResiduo  === Number(body.id_tipoResiduo)
+      );
+      if (!lim) return { sobrepeso: false, peso_max: null, exceso: 0 };
+      const exceso = Number(body.peso_neto) - lim.Peso_max_kg;
+      return { sobrepeso: exceso > 0, peso_max: lim.Peso_max_kg, exceso: exceso > 0 ? exceso : 0 };
+    }
+
+    // REGISTRAR INGRESO
+    case 'registrarIngreso': {
+      const v      = DB.Vehiculo.find(x => x.id_vehiculo === Number(body.id_vehiculo));
+      const tara   = v ? v.Tara : 0;
+      const pneto  = Number(body.peso_bruto) - tara;
+      const tv     = v ? v.id_tipoVehiculo : 0;
+      const lim    = DB.Limite_autorizado.find(l => l.id_tipoVehiculo === tv && l.id_tipoResiduo === Number(body.id_tipoResiduo));
+      const sob    = lim && pneto > lim.Peso_max_kg ? 1 : 0;
+      const exceso = sob ? pneto - lim.Peso_max_kg : 0;
+      const id     = nextId('Ingreso');
+      const fecha  = new Date().toISOString().replace('T',' ').substring(0,19);
+
+      DB.Ingreso.push({
+        id_ingreso: id, id_centro: Number(body.id_centro)||1,
+        id_vehiculo: Number(body.id_vehiculo), id_conductor: Number(body.id_conductor),
+        id_tipoResiduo: Number(body.id_tipoResiduo), id_usuario: Number(body.id_usuario),
+        id_limite: lim?.id_limite || 0, Fecha_hora: fecha,
+        Peso_bruto: Number(body.peso_bruto), Peso_neto: pneto,
+        Sobrepeso: sob, Cantidad_exceso: exceso, Observaciones: body.observaciones || ''
+      });
+
+      // Distribucion multi-celda
+      let dist = [];
+      if (body.celdas_distribucion) {
+        dist = typeof body.celdas_distribucion === 'string'
+          ? JSON.parse(body.celdas_distribucion) : body.celdas_distribucion;
+      } else if (body.id_celda) {
+        dist = [{ id_celda: body.id_celda, kg: pneto }];
+      }
+
+      dist.forEach(d => {
+        const ic = nextId('Ingreso_celda');
+        DB.Ingreso_celda.push({ id_ingresoCelda: ic, id_celda: Number(d.id_celda), id_ingreso: id, Cantidad_descargada: Number(d.kg) });
+        // Actualizar peso celda
+        const cel = DB.Celda.find(c => c.id_celda === Number(d.id_celda));
+        if (cel) {
+          cel.Peso_acumulado += Number(d.kg);
+          if (cel.Peso_acumulado >= cel.Capacidad_max) cel.Activo = 0;
+        }
+        // Actualizar peso en Celda_Tipo_residuo
+        const ctr = DB.Celda_Tipo_residuo.find(r => r.id_celda === Number(d.id_celda) && r.id_tipoResiduo === Number(body.id_tipoResiduo));
+        if (ctr) ctr.Peso_acumulado = (ctr.Peso_acumulado || 0) + Number(d.kg);
+      });
+
+      return { id_ingreso: id, peso_neto: pneto, sobrepeso: sob, exceso };
+    }
+
+    // LISTAS SIMPLES
+    case 'listarMunicipios': return DB.Municipio;
+    case 'listarTodosIngresos':
+    case 'listarIngresos':   return [...DB.Ingreso].reverse();
+    case 'listarCeldas': return DB.Celda.map(c => {
+      const centro = DB.Centro_disposicion.find(x => x.id_centro === c.id_centro) || {};
+      const unidad = DB.Unidad_medida.find(x => x.id_unidadMedida === c.id_unidadMedida) || { Nombre:'Kilogramo', Simbolo:'kg' };
+      return { ...c, centro_nombre: centro.Nombre||'', unidad_simbolo: unidad.Simbolo||'kg', unidad_nombre: unidad.Nombre||'Kilogramo' };
+    });
+    case 'ocupacionCeldas': return DB.Celda.map(c => {
+      const centro = DB.Centro_disposicion.find(x => x.id_centro === c.id_centro) || {};
+      const unidad = DB.Unidad_medida.find(x => x.id_unidadMedida === c.id_unidadMedida) || { Nombre:'Kilogramo', Simbolo:'kg' };
+      return { ...c, centro_nombre: centro.Nombre||'', unidad_simbolo: unidad.Simbolo||'kg', porcentaje: c.Capacidad_max > 0 ? Math.round(c.Peso_acumulado / c.Capacidad_max * 100) : 0 };
+    });
+    case 'listarContratistas': return DB.Contratista;
+    case 'listarUsuarios': {
+      return DB.Usuario.map(u => ({ ...u, rol_nombre: DB.Rol.find(r => r.id_rol === u.id_rol)?.Nombre || '' }));
+    }
+    case 'listarTarifas': {
+      const ahora = new Date(); ahora.setHours(0,0,0,0);
+      return DB.Tarifa_cabecera.map(t => {
+        const det = DB.Tarifa_detalle.filter(d => d.id_tarifa === t.id_tarifa).slice(-1)[0] || {};
+        const con = DB.Contratista.find(c => c.id_contratista === t.id_contratista);
+        const tip = DB.Tipo_residuo.find(r => r.id_tipoResiduo === t.id_tipoResiduo);
+        const ini = det.Fecha_inicio ? new Date(det.Fecha_inicio) : null;
+        const fin = det.Fecha_fin    ? new Date(det.Fecha_fin)    : null;
+        // Vigente: inicio <= hoy Y (sin fin O fin >= hoy)
+        const vigente = ini && ini <= ahora && (!fin || fin >= ahora);
+        // Futura: inicio > hoy
+        const futura  = ini && ini > ahora;
+        const vigencia_estado = !ini ? 'sin_fecha' : futura ? 'futura' : vigente ? 'vigente' : 'vencida';
+        return {
+          ...t,
+          contratista:      con?.Razon_social||'',
+          tipo_residuo:     tip?.Nombre||'',
+          valor_por_unidad: det.Valor_por_unidad||0,
+          Fecha_inicio:     det.Fecha_inicio||'',
+          Fecha_fin:        det.Fecha_fin||'',
+          vigente,
+          vigencia_estado,  // 'vigente' | 'futura' | 'vencida' | 'sin_fecha'
+        };
+      });
+    }
+    case 'listarMultas':      return DB.Multa_config;
+    case 'listarLimites':     return DB.Limite_autorizado;
+    case 'listarTiposResiduo':return DB.Tipo_residuo;
+    case 'listarTiposVehiculo':return DB.Tipo_vehiculo;
+    case 'listarRoles':       return DB.Rol;
+    case 'listarUnidades':    return DB.Unidad_medida;
+    case 'listarCentros':     return DB.Centro_disposicion;
+    case 'listarVehiculos':   return DB.Vehiculo;
+    case 'listarConductores': return DB.Conductor;
+    case 'listarTodosTiposCelda': return DB.Celda_Tipo_residuo;
+    case 'listarTiposCelda':  return DB.Celda_Tipo_residuo.filter(r => r.id_celda === Number(body.id_celda) && r.Activo !== 0).map(r => ({ ...r, Nombre: DB.Tipo_residuo.find(t => t.id_tipoResiduo === r.id_tipoResiduo)?.Nombre || '' }));
+    case 'listarLiquidaciones': return DB.Liquidacion.map(l => ({ ...l, contratista: DB.Contratista.find(c => c.id_contratista === l.id_contratista)?.Razon_social||'' }));
+    case 'detalleLiquidacion': {
+      return DB.Detalle_liquidacion
+        .filter(d => d.id_liquidacion === Number(body.id_liquidacion))
+        .map(d => {
+          const ing  = DB.Ingreso.find(i => i.id_ingreso === d.id_ingreso) || {};
+          const tipo = DB.Tipo_residuo.find(t => t.id_tipoResiduo === ing.id_tipoResiduo) || {};
+          const veh  = DB.Vehiculo.find(v => v.id_vehiculo === ing.id_vehiculo) || {};
+          return {
+            ...d,
+            Fecha_hora:     ing.Fecha_hora    || '',
+            Peso_neto:      ing.Peso_neto     || 0,
+            Sobrepeso:      ing.Sobrepeso     || 0,
+            Cantidad_exceso:ing.Cantidad_exceso||0,
+            tipo_residuo:   tipo.Nombre       || '',
+            placa:          veh.Placa         || '',
+          };
+        });
+    }
+
+    // CREAR / EDITAR
+    case 'crearContratista': {
+      const id = nextId('Contratista');
+      DB.Contratista.push({ id_contratista:id, Razon_social:body.razon_social||'', NIT:body.nit||'', Nombre_contacto:body.nombre_contacto||'', Telefono:body.telefono||'', Activo:1 });
+      return { id_contratista: id };
+    }
+    case 'editarContratista': {
+      const r = DB.Contratista.find(x => x.id_contratista === Number(body.id_contratista));
+      if (r) { if(body.razon_social) r.Razon_social=body.razon_social; if(body.nit) r.NIT=body.nit; if(body.telefono) r.Telefono=body.telefono; if(body.nombre_contacto) r.Nombre_contacto=body.nombre_contacto; if(body.activo!==undefined) r.Activo=Number(body.activo); }
+      return { ok:true };
+    }
+    case 'crearCelda': {
+      const id  = nextId('Celda');
+      const idU = Number(body.id_unidadMedida) || 1;
+      const u   = DB.Unidad_medida.find(x => x.id_unidadMedida === idU) || { Factor_a_kg: 1 };
+      const capKg = Number(body.capacidad_max) * Number(u.Factor_a_kg);
+      DB.Celda.push({ id_celda:id, id_centro:Number(body.id_centro)||1, id_unidadMedida:idU, Nombre:body.nombre||'Celda '+id, Capacidad_max:capKg, Peso_acumulado:0, Activo:1 });
+      return { id_celda: id };
+    }
+    case 'editarCelda': {
+      const r = DB.Celda.find(x => x.id_celda === Number(body.id_celda));
+      if (r) { if(body.nombre) r.Nombre=body.nombre; if(body.capacidad_max) r.Capacidad_max=Number(body.capacidad_max); if(body.activo!==undefined) r.Activo=Number(body.activo); }
+      return { ok:true };
+    }
+    case 'asignarTipoResiduo': {
+      // Si ya existe (inactivo), reactivar en lugar de duplicar
+      const existing = DB.Celda_Tipo_residuo.find(r =>
+        r.id_celda === Number(body.id_celda) && r.id_tipoResiduo === Number(body.id_tipoResiduo)
+      );
+      if (existing) {
+        existing.Activo = 1;
+      } else {
+        const id = nextId('Celda_Tipo_residuo');
+        DB.Celda_Tipo_residuo.push({ id_celdaResiduo:id, id_celda:Number(body.id_celda), id_tipoResiduo:Number(body.id_tipoResiduo), Peso_acumulado:0, Activo:1 });
+      }
+      return { ok:true };
+    }
+    case 'crearVehiculo': {
+      const id = nextId('Vehiculo');
+      DB.Vehiculo.push({ id_vehiculo:id, id_tipoVehiculo:Number(body.id_tipoVehiculo), id_contratista:Number(body.id_contratista), Placa:body.placa||'', Modelo:body.modelo||'', Tara:Number(body.tara)||0, Activo:1 });
+      return { id_vehiculo:id };
+    }
+    case 'editarVehiculo': {
+      const r = DB.Vehiculo.find(x => x.id_vehiculo === Number(body.id_vehiculo));
+      if (r) { if(body.placa) r.Placa=body.placa; if(body.modelo) r.Modelo=body.modelo; if(body.tara) r.Tara=Number(body.tara); if(body.activo!==undefined) r.Activo=Number(body.activo); }
+      return { ok:true };
+    }
+    case 'crearConductor': {
+      const id = nextId('Conductor');
+      DB.Conductor.push({ id_conductor:id, id_contratista:Number(body.id_contratista), Cedula:body.cedula||'', Nombre:body.nombre||'', Telefono:body.telefono||'', Activo:1 });
+      return { id_conductor:id };
+    }
+    case 'editarConductor': {
+      const r = DB.Conductor.find(x => x.id_conductor === Number(body.id_conductor));
+      if (r) { if(body.cedula) r.Cedula=body.cedula; if(body.nombre) r.Nombre=body.nombre; if(body.telefono) r.Telefono=body.telefono; if(body.activo!==undefined) r.Activo=Number(body.activo); }
+      return { ok:true };
+    }
+    case 'crearUsuario': {
+      const id = nextId('Usuario');
+      DB.Usuario.push({ id_usuario:id, id_rol:Number(body.id_rol), Usuario:body.usuario||'', Contrasena:body.contrasena||'', Activo:1 });
+      return { id_usuario:id };
+    }
+    case 'editarUsuario': {
+      const r = DB.Usuario.find(x => x.id_usuario === Number(body.id_usuario));
+      if (r) { if(body.id_rol) r.id_rol=Number(body.id_rol); if(body.usuario) r.Usuario=body.usuario; if(body.contrasena) r.Contrasena=body.contrasena; if(body.activo!==undefined) r.Activo=Number(body.activo); }
+      return { ok:true };
+    }
+    case 'crearTarifa': {
+      const idCab = nextId('Tarifa_cabecera');
+      DB.Tarifa_cabecera.push({ id_tarifa:idCab, id_contratista:Number(body.id_contratista), id_tipoResiduo:Number(body.id_tipoResiduo), Activo:1 });
+      const idDet = nextId('Tarifa_detalle');
+      DB.Tarifa_detalle.push({ id_tarifaDetalle:idDet, id_tarifa:idCab, Valor_por_unidad:Number(body.valor_por_unidad)||0, Fecha_inicio:body.fecha_inicio||'', Fecha_fin:'' });
+      return { id_tarifa:idCab };
+    }
+    case 'editarTarifa': {
+      const det = DB.Tarifa_detalle.filter(d => d.id_tarifa === Number(body.id_tarifa)).slice(-1)[0];
+      if (det && body.valor_por_unidad) det.Valor_por_unidad = Number(body.valor_por_unidad);
+      const cab = DB.Tarifa_cabecera.find(t => t.id_tarifa === Number(body.id_tarifa));
+      if (cab && body.activo !== undefined) cab.Activo = Number(body.activo);
+      return { ok:true };
+    }
+    case 'crearMulta': {
+      const id = nextId('Multa_config');
+      DB.Multa_config.push({ id_multa:id, id_contratista:Number(body.id_contratista), id_tipoResiduo:Number(body.id_tipoResiduo), Minimo_kg:Number(body.minimo_kg)||0, Maximo_kg:Number(body.maximo_kg)||0, Valor_multa:Number(body.valor_multa)||0 });
+      return { id_multa:id };
+    }
+    case 'crearLimite': {
+      const id = nextId('Limite_autorizado');
+      DB.Limite_autorizado.push({ id_limite:id, id_tipoVehiculo:Number(body.id_tipoVehiculo), id_tipoResiduo:Number(body.id_tipoResiduo), Peso_max_kg:Number(body.peso_max_kg)||0 });
+      return { id_limite:id };
+    }
+    case 'generarLiquidacion': {
+      const idC   = Number(body.id_contratista);
+      const fIni  = new Date(body.periodo_inicio); fIni.setHours(0,0,0,0);
+      const fFin  = new Date(body.periodo_fin);    fFin.setHours(23,59,59,999);
+      const vehs  = DB.Vehiculo.filter(v => v.id_contratista === idC).map(v => v.id_vehiculo);
+      const ings  = DB.Ingreso.filter(i => vehs.includes(i.id_vehiculo) && new Date(i.Fecha_hora) >= fIni && new Date(i.Fecha_hora) <= fFin);
+      if (!ings.length) throw new Error('No hay ingresos para este contratista en el periodo seleccionado');
+      let totalKg=0, totalT=0, totalM=0;
+      const detalles = ings.map(ing => {
+        const fIng = new Date(ing.Fecha_hora);
+        // Buscar tarifa vigente en la fecha del ingreso
+        const tc = DB.Tarifa_cabecera.find(t => {
+          if (t.id_contratista !== idC || t.id_tipoResiduo !== ing.id_tipoResiduo || !t.Activo) return false;
+          const det = DB.Tarifa_detalle.filter(d => d.id_tarifa === t.id_tarifa).slice(-1)[0];
+          if (!det) return false;
+          const ini = det.Fecha_inicio ? new Date(det.Fecha_inicio) : new Date('2000-01-01');
+          const fin = det.Fecha_fin    ? new Date(det.Fecha_fin)    : new Date('2099-12-31');
+          return fIng >= ini && fIng <= fin;
+        });
+        const det = tc ? DB.Tarifa_detalle.filter(d=>d.id_tarifa===tc.id_tarifa).slice(-1)[0] : null;
+        const vpu = det ? Number(det.Valor_por_unidad) : 0;
+        const vt  = ing.Peso_neto * vpu;
+        let vm = 0;
+        if (ing.Sobrepeso && ing.Cantidad_exceso > 0) {
+          const mc = DB.Multa_config.find(m => m.id_contratista===idC && m.id_tipoResiduo===ing.id_tipoResiduo && ing.Cantidad_exceso>=m.Minimo_kg && ing.Cantidad_exceso<=m.Maximo_kg);
+          if (mc) vm = ing.Cantidad_exceso * mc.Valor_multa;
+        }
+        totalKg += ing.Peso_neto; totalT += vt; totalM += vm;
+        return { id_ingreso:ing.id_ingreso, valor_transporte:vt, valor_multa:vm, subtotal:vt-vm };
+      });
+      const idLiq = nextId('Liquidacion');
+      DB.Liquidacion.push({ id_liquidacion:idLiq, id_contratista:idC, Periodo_inicio:body.periodo_inicio, Periodo_fin:body.periodo_fin, Total_peso:totalKg, Valor_transporte:totalT, Valor_multas:totalM, Valor_total:totalT-totalM, Estado:'BORRADOR', Fecha_generacion:new Date().toISOString().substring(0,10) });
+      detalles.forEach(d => { DB.Detalle_liquidacion.push({ id_detalle:nextId('Detalle_liquidacion'), id_liquidacion:idLiq, ...d }); });
+      return { id_liquidacion:idLiq, total_peso:totalKg, valor_transporte:totalT, valor_multas:totalM, valor_total:totalT-totalM };
+    }
+    case 'aprobarLiquidacion': {
+      const l = DB.Liquidacion.find(x => x.id_liquidacion === Number(body.id_liquidacion));
+      if (l) l.Estado = 'APROBADA';
+      return { ok:true };
+    }
+
+    default: throw new Error('Accion no reconocida: ' + action);
+  }
+}
+
+
+// ============================================================
+// STATE
+// ============================================================
+const S = {
+  user: null,
+  rol: null,
+  screen: null,
+  cache: {}
+};
+
+// ============================================================
+// ERD DEFINITION
+// ============================================================
+// Layout fiel al modelo del cliente
+// Columnas: 0=10, 1=140, 2=270, 3=400, 4=530, 5=660, 6=790
+// Filas:    A=10, B=155, C=310, D=465, E=615, F=760
+const ERD_TABLES = [
+  // ── Fila A: Catálogos geográficos + celdas + tipos ──
+  { id:'limite',        name:'Limite_autorizado',    x:10,  y:10,  fields:['id_limite PK','id_tipoResiduo FK','id_tipoVehiculo FK','Peso_max_kg'] },
+  { id:'municipio',     name:'Municipio',            x:140, y:10,  fields:['id_municipio PK','id_departamento FK','Nombre','Activo'] },
+  { id:'centro',        name:'Centro_disposicion',   x:270, y:10,  fields:['id_centro PK','id_municipio FK','Nombre','Direccion','Activo'] },
+  { id:'celda',         name:'Celda',                x:400, y:10,  fields:['id_celda PK','id_centro FK','id_unidadMedida FK','Nombre','Capacidad_max','Peso_acumulado','Activo'] },
+  { id:'celda_tipo',    name:'Celda_Tipo_residuo',   x:530, y:10,  fields:['id_celdaResiduo PK','id_celda FK','id_tipoResiduo FK','Peso_acumulado','Activo'] },
+  { id:'tipo_residuo',  name:'Tipo_residuo',         x:660, y:10,  fields:['id_tipoResiduo PK','Nombre','Descripcion'] },
+  { id:'unidad',        name:'Unidad_medida',        x:790, y:10,  fields:['id_unidadMedida PK','Nombre','Simbolo','Factor_a_kg'] },
+
+  // ── Fila B: Departamento + Tipo vehículo + Ingreso_celda ──
+  { id:'departamento',  name:'Departamento',         x:140, y:155, fields:['id_departamento PK','Nombre','Activo'] },
+  { id:'tipo_vehiculo', name:'Tipo_vehiculo',        x:10,  y:310, fields:['id_tipoVehiculo PK','id_unidadMedida FK','Nombre','Descripcion','Capacidad_maxima'] },
+  { id:'ingreso_celda', name:'Ingreso_celda',        x:530, y:155, fields:['id_ingresoCelda PK','id_celda FK','id_ingreso FK','Cantidad_descargada'] },
+
+  // ── Fila C: Flota ──
+  { id:'vehiculo',      name:'Vehiculo',             x:140, y:310, fields:['id_vehiculo PK','id_tipoVehiculo FK','id_contratista FK','Placa','Modelo','Tara','Activo'] },
+
+  // ── Fila D: Ingreso (entidad central) ──
+  { id:'ingreso',       name:'Ingreso',              x:270, y:465, fields:['id_ingreso PK','id_centro FK','id_vehiculo FK','id_conductor FK','id_tipoResiduo FK','id_usuario FK','id_limite FK','Fecha_hora','Peso_bruto','Peso_neto','Sobrepeso','Cantidad_exceso','Observaciones'] },
+
+  // ── Fila D-E: Contratista y flota ──
+  { id:'contratista',   name:'Contratista',          x:10,  y:465, fields:['id_contratista PK','Razon_social','NIT','Nombre_contacto','Telefono','Activo'] },
+  { id:'vehiculo_con',  name:'Vehiculo_contratista', x:140, y:615, fields:['id_vinculoContratista PK','id_contratista FK','id_vehiculo FK','Fecha_inicio','Fecha_fin','Activo'] },
+  { id:'conductor',     name:'Conductor',            x:400, y:310, fields:['id_conductor PK','id_contratista FK','Cedula','Nombre','Telefono','Activo'] },
+
+  // ── Auth ──
+  { id:'usuario',       name:'Usuario',              x:530, y:465, fields:['id_usuario PK','id_rol FK','Usuario','Contrasena','Activo'] },
+  { id:'rol',           name:'Rol',                  x:660, y:465, fields:['id_rol PK','Nombre','Descripcion'] },
+
+  // ── Financiero ──
+  { id:'tarifa_cab',    name:'Tarifa_cabecera',      x:660, y:310, fields:['id_tarifa PK','id_contratista FK','id_tipoResiduo FK','Activo'] },
+  { id:'tarifa_det',    name:'Tarifa_detalle',       x:790, y:310, fields:['id_tarifaDetalle PK','id_tarifa FK','Valor_por_unidad','Fecha_inicio','Fecha_fin'] },
+  { id:'multa_config',  name:'Multa_config',         x:10,  y:760, fields:['id_multa PK','id_contratista FK','id_tipoResiduo FK','Minimo_kg','Maximo_kg','Valor_multa'] },
+  { id:'liquidacion',   name:'Liquidacion',          x:270, y:760, fields:['id_liquidacion PK','id_contratista FK','Periodo_inicio','Periodo_fin','Total_peso','Valor_transporte','Valor_multas','Valor_total','Estado','Fecha_generacion'] },
+  { id:'detalle_liq',   name:'Detalle_liquidacion',  x:400, y:760, fields:['id_detalle PK','id_liquidacion FK','id_ingreso FK','Valor_transporte','Valor_multa','Subtotal'] },
+];
+
+const ERD_CONNS = [
+  // Auth
+  ['usuario','rol'],
+  // Geo
+  ['municipio','departamento'], ['centro','municipio'],
+  // Catálogos
+  ['tipo_residuo','unidad'], ['tipo_vehiculo','unidad'],
+  ['limite','tipo_vehiculo'], ['limite','tipo_residuo'],
+  // Celdas
+  ['celda','centro'], ['celda','unidad'],
+  ['celda_tipo','celda'], ['celda_tipo','tipo_residuo'],
+  // Flota
+  ['vehiculo','tipo_vehiculo'], ['vehiculo','contratista'],
+  ['vehiculo_con','vehiculo'], ['vehiculo_con','contratista'],
+  ['conductor','contratista'],
+  // Operación
+  ['ingreso','centro'], ['ingreso','vehiculo'], ['ingreso','conductor'],
+  ['ingreso','tipo_residuo'], ['ingreso','usuario'], ['ingreso','limite'],
+  ['ingreso_celda','ingreso'], ['ingreso_celda','celda'],
+  // Financiero
+  ['tarifa_cab','contratista'], ['tarifa_cab','tipo_residuo'],
+  ['tarifa_det','tarifa_cab'],
+  ['multa_config','contratista'], ['multa_config','tipo_residuo'],
+  ['liquidacion','contratista'],
+  ['detalle_liq','liquidacion'], ['detalle_liq','ingreso'],
+];
+
+// Flujos de usuario: qué tablas se activan y en qué orden
+const FLOWS = {
+
+  login: {
+    label: 'Autenticación',
+    steps: [
+      { tables: ['usuario'],                          msg: 'Buscando usuario en la tabla Usuario' },
+      { tables: ['usuario','rol'],                    msg: 'Verificando credenciales y estado Activo' },
+      { tables: ['rol'],                              msg: 'Cargando permisos según Rol asignado' },
+    ]
+  },
+
+  // ── OPERARIO PORTERÍA ──────────────────────────────
+  registrarIngreso: {
+    label: 'Registrar Ingreso',
+    steps: [
+      { tables: ['centro'],                           msg: 'Seleccionando centro de disposición' },
+      { tables: ['conductor','contratista'],          msg: 'Buscando conductor por cédula → valida Activo' },
+      { tables: ['vehiculo','tipo_vehiculo'],         msg: 'Buscando vehículo por placa → tipo y tara' },
+      { tables: ['vehiculo','contratista'],           msg: 'Validando que conductor y vehículo son del mismo contratista' },
+      { tables: ['limite','tipo_vehiculo','tipo_residuo'], msg: 'Consultando Limite_autorizado para tipo vehículo + tipo residuo' },
+      { tables: ['celda_tipo','tipo_residuo'],        msg: 'Buscando celdas autorizadas para el tipo de residuo y centro' },
+      { tables: ['celda','unidad'],                   msg: 'Distribuyendo carga entre celdas disponibles (menor ocupación primero)' },
+      { tables: ['ingreso','usuario'],                msg: 'Registrando Ingreso con peso bruto, neto, sobrepeso y exceso' },
+      { tables: ['ingreso_celda','celda'],            msg: 'Creando Ingreso_celda por cada celda → actualizando Peso_acumulado' },
+      { tables: ['celda_tipo'],                       msg: 'Actualizando Peso_acumulado en Celda_Tipo_residuo por tipo' },
+    ]
+  },
+
+  historialIngresos: {
+    label: 'Historial de Ingresos',
+    steps: [
+      { tables: ['ingreso'],                          msg: 'Cargando todos los ingresos ordenados por fecha' },
+      { tables: ['vehiculo'],                         msg: 'Resolviendo placa y modelo por id_vehiculo' },
+      { tables: ['conductor'],                        msg: 'Resolviendo nombre del conductor' },
+      { tables: ['tipo_residuo'],                     msg: 'Resolviendo nombre del tipo de residuo' },
+      { tables: ['ingreso_celda','celda'],            msg: 'Verificando celdas destino de cada ingreso' },
+    ]
+  },
+
+  // ── ADMIN CELDAS ───────────────────────────────────
+  gestionCeldas: {
+    label: 'Gestión de Celdas',
+    steps: [
+      { tables: ['celda','centro'],                   msg: 'Cargando celdas con su centro de disposición' },
+      { tables: ['unidad'],                           msg: 'Resolviendo Unidad_medida → conversión a kg' },
+      { tables: ['celda_tipo'],                       msg: 'Cargando tipos de residuo asignados a cada celda' },
+      { tables: ['tipo_residuo'],                     msg: 'Resolviendo nombre de cada tipo de residuo' },
+    ]
+  },
+
+  ocupacion: {
+    label: 'Ocupación de Celdas',
+    steps: [
+      { tables: ['celda','centro'],                   msg: 'Cargando Capacidad_max y Peso_acumulado de cada celda' },
+      { tables: ['unidad'],                           msg: 'Verificando unidad de medida para mostrar correctamente' },
+      { tables: ['celda_tipo','tipo_residuo'],        msg: 'Desglosando peso por tipo de residuo dentro de cada celda' },
+      { tables: ['ingreso_celda'],                    msg: 'Calculando porcentaje de ocupación por celda' },
+    ]
+  },
+
+  gestionContratistas: {
+    label: 'Gestión de Contratistas',
+    steps: [
+      { tables: ['contratista'],                      msg: 'Cargando todos los contratistas activos e inactivos' },
+      { tables: ['vehiculo','tipo_vehiculo'],         msg: 'Cargando flota de vehículos por contratista' },
+      { tables: ['vehiculo_con'],                     msg: 'Verificando historial de vinculación vehículo-contratista' },
+      { tables: ['conductor'],                        msg: 'Cargando conductores asignados a cada contratista' },
+    ]
+  },
+
+  generarLiquidacion: {
+    label: 'Generar Liquidación',
+    steps: [
+      { tables: ['contratista'],                      msg: 'Seleccionando contratista a liquidar' },
+      { tables: ['vehiculo','vehiculo_con'],          msg: 'Obteniendo vehículos del contratista en el periodo' },
+      { tables: ['ingreso'],                          msg: 'Filtrando ingresos del periodo por vehículo' },
+      { tables: ['tipo_residuo'],                     msg: 'Identificando tipo de residuo de cada ingreso' },
+      { tables: ['tarifa_cab','tarifa_det'],          msg: 'Buscando Tarifa_detalle vigente en fecha del ingreso' },
+      { tables: ['multa_config'],                     msg: 'Aplicando multa si hay sobrepeso y exceso en rango configurado' },
+      { tables: ['liquidacion'],                      msg: 'Creando cabecera de Liquidacion en estado BORRADOR' },
+      { tables: ['detalle_liq','ingreso'],            msg: 'Generando Detalle_liquidacion: un registro por viaje' },
+    ]
+  },
+
+  aprobarLiquidacion: {
+    label: 'Aprobar Liquidación',
+    steps: [
+      { tables: ['liquidacion'],                      msg: 'Cargando liquidaciones en estado BORRADOR' },
+      { tables: ['detalle_liq'],                      msg: 'Revisando detalle de viajes y cálculos' },
+      { tables: ['ingreso','tipo_residuo'],           msg: 'Verificando datos de cada ingreso del detalle' },
+      { tables: ['liquidacion'],                      msg: 'Actualizando Estado de BORRADOR → APROBADA' },
+    ]
+  },
+
+  // ── ADMIN GENERAL ──────────────────────────────────
+  gestionUsuarios: {
+    label: 'Gestión de Usuarios',
+    steps: [
+      { tables: ['usuario'],                          msg: 'Cargando todos los usuarios del sistema' },
+      { tables: ['rol'],                              msg: 'Resolviendo nombre del rol de cada usuario' },
+    ]
+  },
+
+  gestionTarifas: {
+    label: 'Gestión de Tarifas',
+    steps: [
+      { tables: ['tarifa_cab'],                       msg: 'Cargando cabeceras de Tarifa por contratista y tipo' },
+      { tables: ['tarifa_det'],                       msg: 'Cargando Tarifa_detalle: Valor_por_unidad y vigencias' },
+      { tables: ['contratista'],                      msg: 'Resolviendo nombre del contratista' },
+      { tables: ['tipo_residuo'],                     msg: 'Resolviendo nombre del tipo de residuo' },
+    ]
+  },
+
+  gestionMultas: {
+    label: 'Configuración de Multas',
+    steps: [
+      { tables: ['multa_config'],                     msg: 'Cargando tramos de multa por contratista y tipo' },
+      { tables: ['contratista'],                      msg: 'Resolviendo nombre del contratista' },
+      { tables: ['tipo_residuo'],                     msg: 'Resolviendo tipo de residuo del tramo' },
+    ]
+  },
+
+  gestionLimites: {
+    label: 'Límites Autorizados',
+    steps: [
+      { tables: ['limite'],                           msg: 'Cargando todos los límites de peso autorizados' },
+      { tables: ['tipo_vehiculo'],                    msg: 'Resolviendo nombre del tipo de vehículo' },
+      { tables: ['tipo_residuo'],                     msg: 'Resolviendo nombre del tipo de residuo' },
+      { tables: ['unidad'],                           msg: 'Verificando unidad de medida del tipo de vehículo' },
+    ]
+  },
+
+};
+
+// api() definida arriba junto con DB
+
+
+// ============================================================
+// TOAST
+// ============================================================
+function toast(msg, type='success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'show ' + type;
+  clearTimeout(t._t);
+  t._t = setTimeout(() => { t.className = ''; }, 3000);
+}
+
+// ============================================================
+// MODAL
+// ============================================================
+function openModal(html, onConfirm) {
+  const o = document.getElementById('modal-overlay');
+  const b = document.getElementById('modal-box');
+  b.innerHTML = html;
+  o.classList.add('open');
+  if (onConfirm) {
+    const btn = b.querySelector('[data-confirm]');
+    if (btn) btn.addEventListener('click', async () => { await onConfirm(); closeModal(); });
+  }
+  b.querySelector('[data-close]')?.addEventListener('click', closeModal);
+}
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+}
+
+// ============================================================
+// ERD
+// ============================================================
+const TW = 110, TH_HEAD = 16, TH_ROW = 10;
+let erdScale = 1.0;
+let erdDragState = null;
+
+function erdZoom(delta) {
+  erdScale = Math.max(0.3, Math.min(2.5, erdScale + delta));
+  document.getElementById('erd-svg-inner').style.transform = `scale(${erdScale})`;
+  document.getElementById('erd-zoom-val').textContent = Math.round(erdScale * 100) + '%';
+}
+function erdZoomReset() { erdScale = 1.0; erdZoom(0); }
+
+function toggleERD() {
+  const panel = document.getElementById('erd-panel');
+  panel.classList.toggle('visible');
+  if (panel.classList.contains('visible') && S.user) buildERD();
+}
+
+function buildERD() {
+  const inner = document.getElementById('erd-svg-inner');
+  if (!inner) return;
+
+  const allX = ERD_TABLES.map(t => t.x + TW);
+  const allY = ERD_TABLES.map(t => t.y + TH_HEAD + TH_ROW * t.fields.length);
+  const maxX = Math.max(...allX) + 20;
+  const maxY = Math.max(...allY) + 20;
+
+  // Color por grupo
+  const groupColor = {
+    geo: '#1e3a8a', ops: '#0c4a6e', fleet: '#78350f',
+    money: '#14532d', cat: '#3b0764', auth: '#831843', pivot: '#1e293b'
+  };
+  const tableGroup = {
+    usuario:'auth', rol:'auth',
+    ingreso:'ops', ingreso_celda:'ops',
+    vehiculo:'fleet', conductor:'fleet', contratista:'fleet', vehiculo_con:'fleet',
+    celda:'ops', celda_tipo:'ops', centro:'ops',
+    tipo_residuo:'cat', tipo_vehiculo:'cat', unidad:'cat',
+    liquidacion:'money', detalle_liq:'money', tarifa_cab:'money', tarifa_det:'money',
+    multa_config:'money', limite:'cat',
+    municipio:'geo', departamento:'geo',
+  };
+
+  let svg = `<svg id="erd-svg" width="${maxX}" height="${maxY}" xmlns="http://www.w3.org/2000/svg">`;
+  svg += `<defs><marker id="arr" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#2563eb" opacity=".6"/></marker></defs>`;
+
+  // Background grid
+  svg += `<pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M20 0 L0 0 0 20" fill="none" stroke="#0d1628" stroke-width="0.5"/></pattern>`;
+  svg += `<rect width="${maxX}" height="${maxY}" fill="url(#grid)"/>`;
+
+  // Connections
+  ERD_CONNS.forEach(([a,b]) => {
+    const ta = ERD_TABLES.find(t=>t.id===a), tb = ERD_TABLES.find(t=>t.id===b);
+    if (!ta||!tb) return;
+    const x1=ta.x+TW/2, y1=ta.y+TH_HEAD/2, x2=tb.x+TW/2, y2=tb.y+TH_HEAD/2;
+    const mx=(x1+x2)/2, my=(y1+y2)/2;
+    svg += `<path class="erd-conn" id="conn-${a}-${b}" d="M${x1},${y1} Q${mx},${my} ${x2},${y2}" marker-end="url(#arr)"/>`;
+  });
+
+  // Tables
+  ERD_TABLES.forEach(t => {
+    const h = TH_HEAD + TH_ROW * t.fields.length + 6;
+    const gc = groupColor[tableGroup[t.id]] || '#1e293b';
+    svg += `<g class="erd-table" id="erd-${t.id}" transform="translate(${t.x},${t.y})">`;
+    svg += `<rect class="body" x="0" y="0" width="${TW}" height="${h}" rx="4"/>`;
+    svg += `<rect class="header" x="0" y="0" width="${TW}" height="${TH_HEAD}" rx="4" style="fill:${gc}"/>`;
+    svg += `<rect x="0" y="${TH_HEAD-4}" width="${TW}" height="4" style="fill:${gc}"/>`;
+    svg += `<text class="tname" x="${TW/2}" y="${TH_HEAD-4}" text-anchor="middle">${t.name}</text>`;
+    t.fields.forEach((f,i) => {
+      const isPK = f.toLowerCase().startsWith('id_') && i===0;
+      const isFK = f.toLowerCase().startsWith('id_') && i>0;
+      const cls  = isPK ? 'field pk' : isFK ? 'field fk' : 'field';
+      const prefix = isPK ? '🔑 ' : isFK ? '↗ ' : '  ';
+      svg += `<text class="${cls}" x="5" y="${TH_HEAD+5+TH_ROW*i+TH_ROW-2}">${prefix}${f}</text>`;
+    });
+    svg += `</g>`;
+  });
+
+  // Anotaciones de reglas de negocio
+  const notes = [
+    { x: 650, y: 200, w: 140, text: 'El sistema divide la carga entre celdas disponibles del centro seleccionado (menor ocupación primero)', color: '#1a3060' },
+    { x: 10,  y: 870, w: 140, text: 'Si un vehículo excede el límite autorizado, se genera una multa en la liquidación mensual descontada del valor a pagar', color: '#3a1a1a' },
+    { x: 460, y: 620, w: 120, text: 'Valor a liquidar por kg según tipo de residuo, contratista y vigencia de la tarifa', color: '#1a2a1a' },
+  ];
+  notes.forEach(n => {
+    svg += `<rect x="${n.x}" y="${n.y}" width="${n.w}" height="60" rx="4" style="fill:${n.color};stroke:#334155;stroke-width:1;stroke-dasharray:3 2"/>`;
+    // Wrap text manually (max 25 chars per line)
+    const words = n.text.split(' ');
+    let lines2 = [], cur2 = '';
+    words.forEach(w => { if ((cur2+' '+w).trim().length > 22) { lines2.push(cur2.trim()); cur2 = w; } else cur2 += ' '+w; });
+    if (cur2.trim()) lines2.push(cur2.trim());
+    lines2.slice(0,5).forEach((ln, li) => {
+      svg += `<text x="${n.x+4}" y="${n.y+10+li*11}" style="fill:#94a3b8;font-family:'IBM Plex Mono',monospace;font-size:5px">${ln}</text>`;
+    });
+  });
+  svg += '</svg>';
+  inner.innerHTML = svg;
+
+  // Wheel zoom
+  const wrap = document.getElementById('erd-svg-wrap');
+  wrap.onwheel = e => { e.preventDefault(); erdZoom(e.deltaY < 0 ? 0.1 : -0.1); };
+
+  // Drag to pan
+  wrap.onmousedown = e => { if(e.button===0) { erdDragState={x:e.clientX+wrap.scrollLeft, y:e.clientY+wrap.scrollTop}; } };
+  wrap.onmousemove = e => { if(erdDragState) { wrap.scrollLeft=erdDragState.x-e.clientX; wrap.scrollTop=erdDragState.y-e.clientY; } };
+  wrap.onmouseup = () => erdDragState=null;
+  wrap.onmouseleave = () => erdDragState=null;
+}
+
+let erdFlowTimer = null;
+function runFlow(flowKey) {
+  const flow = FLOWS[flowKey];
+  if (!flow) return;
+  clearFlow();
+  if (erdFlowTimer) clearTimeout(erdFlowTimer);
+
+  const log = document.getElementById('erd-log');
+  log.innerHTML = `<div class="log-line info" style="font-weight:600;color:#93c5fd">▶ ${flow.label} (${flow.steps.length} pasos)</div>`;
+
+  let step = 0;
+  function runStep() {
+    if (step >= flow.steps.length) {
+      setTimeout(clearFlow, 3000);
+      return;
+    }
+    const s = flow.steps[step];
+    clearHighlights();
+    s.tables.forEach(tid => highlightTable(tid));
+    highlightConns(s.tables);
+
+    const line = document.createElement('div');
+    line.className = 'log-line active';
+    line.textContent = `[${String(step+1).padStart(2,'0')}/${flow.steps.length}] ${s.msg}`;
+    log.appendChild(line);
+    log.scrollTop = log.scrollHeight;
+
+    step++;
+    erdFlowTimer = setTimeout(runStep, 1600);
+  }
+  runStep();
+}
+
+function clearHighlights() {
+  document.querySelectorAll('.erd-table.highlighted').forEach(el => el.classList.remove('highlighted'));
+  document.querySelectorAll('.erd-conn.highlighted').forEach(el => el.classList.remove('highlighted'));
+}
+
+function clearFlow() {
+  clearHighlights();
+  const log = document.getElementById('erd-log');
+  log.innerHTML = `<div class="log-line info">// Ejecuta un flujo para ver las entidades activas</div>`;
+}
+
+function highlightTable(id) {
+  const el = document.getElementById('erd-' + id);
+  if (el) el.classList.add('highlighted');
+}
+
+function highlightConns(tables) {
+  ERD_CONNS.forEach(([a,b]) => {
+    if (tables.includes(a) || tables.includes(b)) {
+      const el = document.getElementById(`conn-${a}-${b}`);
+      if (el) el.classList.add('highlighted');
+    }
+  });
+}
+
+// ============================================================
+// NAV
+// ============================================================
+const NAV_ITEMS = {
+  OPERARIO_PORTERIA: [
+    { id:'ingreso',      icon:'fa-solid fa-truck-ramp-box', label:'Registrar Ingreso',   flow:'registrarIngreso'   },
+    { id:'ingresos',     icon:'fa-solid fa-clipboard-list', label:'Historial Ingresos',  flow:'historialIngresos'  },
+  ],
+  ADMIN_CELDAS: [
+    { id:'celdas',       icon:'fa-solid fa-layer-group',         label:'Celdas',         flow:'gestionCeldas'      },
+    { id:'ocupacion',    icon:'fa-solid fa-chart-pie',           label:'Ocupación',       flow:'ocupacion'          },
+    { id:'contratistas', icon:'fa-solid fa-building',            label:'Contratistas',    flow:'gestionContratistas'},
+    { id:'ingresos',     icon:'fa-solid fa-clipboard-list',      label:'Historial Ingresos', flow:'historialIngresos'},
+    { id:'liquidaciones',icon:'fa-solid fa-file-invoice-dollar', label:'Liquidaciones',   flow:'generarLiquidacion' },
+    { id:'aprobarliq',   icon:'fa-solid fa-circle-check',        label:'Aprobar Liq.',    flow:'aprobarLiquidacion' },
+  ],
+  ADMIN_GENERAL: [
+    { id:'usuarios',     icon:'fa-solid fa-users',               label:'Usuarios',        flow:'gestionUsuarios'    },
+    { id:'tarifas',      icon:'fa-solid fa-tags',                label:'Tarifas',         flow:'gestionTarifas'     },
+    { id:'multas',       icon:'fa-solid fa-triangle-exclamation',label:'Multas Config',   flow:'gestionMultas'      },
+    { id:'limites',      icon:'fa-solid fa-gauge-high',          label:'Límites',         flow:'gestionLimites'     },
+  ]
+};
+
+function renderNav(rol) {
+  const nav = document.getElementById('nav');
+  const items = NAV_ITEMS[rol] || [];
+  nav.innerHTML = `<div class="nav-section">MÓDULOS</div>` +
+    items.map(it =>
+      `<div class="nav-item" data-screen="${it.id}" data-flow="${it.flow||''}">
+        <span class="nav-icon"><i class="${it.icon}"></i></span><span>${it.label}</span>
+      </div>`
+    ).join('');
+
+  nav.querySelectorAll('.nav-item').forEach(el => {
+    el.addEventListener('click', () => {
+      nav.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));
+      el.classList.add('active');
+      renderScreen(el.dataset.screen);
+    });
+  });
+}
+
+// ============================================================
+// SCREENS
+// ============================================================
+// Mapa pantalla → flujo (para disparar desde renderScreen directamente)
+const SCREEN_FLOW = {
+  ingreso:       'registrarIngreso',
+  ingresos:      'historialIngresos',
+  celdas:        'gestionCeldas',
+  ocupacion:     'ocupacion',
+  contratistas:  'gestionContratistas',
+  liquidaciones: 'generarLiquidacion',
+  aprobarliq:    'aprobarLiquidacion',
+  usuarios:      'gestionUsuarios',
+  tarifas:       'gestionTarifas',
+  multas:        'gestionMultas',
+  limites:       'gestionLimites',
+};
+
+async function renderScreen(id) {
+  S.screen = id;
+  const c = document.getElementById('content');
+  c.innerHTML = '<div style="padding:20px;color:var(--text2);font-family:var(--mono);font-size:12px">Cargando...</div>';
+  // Disparar flujo ERD automáticamente al cargar la pantalla
+  const flowKey = SCREEN_FLOW[id];
+  if (flowKey) setTimeout(() => runFlow(flowKey), 200);
+  const screens = {
+    ingreso:       screenIngreso,
+    ingresos:      screenIngresos,
+    celdas:        screenCeldas,
+    ocupacion:     screenOcupacion,
+    contratistas:  screenContratistas,
+    liquidaciones: screenLiquidaciones,
+    aprobarliq:    screenAprobarLiq,
+    usuarios:      screenUsuarios,
+    tarifas:       screenTarifas,
+    multas:        screenMultas,
+    limites:       screenLimites,
+  };
+  const fn = screens[id];
+  if (!fn) { c.innerHTML = '<div class="alert alert-red" style="margin:20px">Pantalla no encontrada: ' + id + '</div>'; return; }
+  try {
+    await fn(c);
+  } catch(e) {
+    console.error('renderScreen error:', e);
+    c.innerHTML = `<div class="alert alert-red" style="margin:20px">
+      <b>Error cargando módulo</b><br>
+      <span style="font-family:var(--mono);font-size:11px">${e.message}</span><br><br>
+      <span style="font-size:11px;color:var(--text2)">Revisa la consola (F12) para más detalles</span>
+    </div>`;
+  }
+}
+
+// ----- INGRESO WIZARD -----
+function screenIngreso(c) {
+  c.innerHTML = `
+  <div class="fadein">
+    <div class="page-header">
+      <div><div class="page-title"><i class="fa-solid fa-truck-ramp-box"></i> Registrar Ingreso</div><div class="page-sub">Portería principal — registro de vehículos</div></div>
+    </div>
+    <div class="wizard-steps">
+      <div class="wizard-step active" id="ws1">1 CENTRO</div>
+      <div class="wizard-step" id="ws2">2 CONDUCTOR</div>
+      <div class="wizard-step" id="ws3">3 VEHÍCULO</div>
+      <div class="wizard-step" id="ws4">4 PESAJE</div>
+      <div class="wizard-step" id="ws5">5 RESIDUO + CELDA</div>
+      <div class="wizard-step" id="ws6">6 CONFIRMAR</div>
+    </div>
+    <div class="card" style="max-width:540px">
+      <div id="wizard-body"></div>
+    </div>
+  </div>`;
+
+  const wiz = { centro:null, conductor:null, vehiculo:null, tipoResiduo:null, celda:null, peso_bruto:null, distribucion:null };
+
+  function setStep(n) {
+    for(let i=1;i<=6;i++){
+      const el=document.getElementById('ws'+i);
+      if (!el) continue;
+      if(i<n) el.className='wizard-step done';
+      else if(i===n) el.className='wizard-step active';
+      else el.className='wizard-step';
+    }
+  }
+
+  function row(l,v){return `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px"><span style="color:var(--text2)">${l}</span><span>${v}</span></div>`;}
+
+  // STEP 1 — Centro de disposición
+  async function renderStep1() {
+    setStep(1);
+    const centros = await api('listarCentros');
+    const munMap  = {};
+    (await api('listarMunicipios')).forEach(m => munMap[m.id_municipio] = m.Nombre);
+    document.getElementById('wizard-body').innerHTML = `
+      <div class="field">
+        <label>CENTRO DE DISPOSICIÓN</label>
+        <p style="font-size:11px;color:var(--text3);margin-bottom:8px">Selecciona el relleno al que ingresa el vehículo</p>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          ${centros.filter(c=>c.Activo).map(c=>`
+            <div class="centro-option" data-id="${c.id_centro}" style="border:1.5px solid var(--border);border-radius:var(--r);padding:12px 14px;cursor:pointer;transition:all .2s">
+              <div style="font-weight:600;font-size:13px">${c.Nombre}</div>
+              <div style="font-size:11px;color:var(--text2);margin-top:2px">📍 ${munMap[c.id_municipio]||''} — ${c.Direccion||''}</div>
+            </div>`).join('')}
+        </div>
+      </div>`;
+    document.querySelectorAll('.centro-option').forEach(el => {
+      el.addEventListener('click', () => {
+        const centro = centros.find(c => c.id_centro === Number(el.dataset.id));
+        wiz.centro = centro;
+        el.style.borderColor='var(--primary)'; el.style.background='var(--primary-light)';
+        setTimeout(renderStep2, 400);
+      });
+    });
+  }
+
+  // STEP 2 — Conductor
+  function renderStep2() {
+    setStep(2);
+    document.getElementById('wizard-body').innerHTML = `
+      <div class="alert alert-green" style="margin-bottom:10px">✓ Centro: <b>${wiz.centro.Nombre}</b></div>
+      <div class="field"><label>CÉDULA DEL CONDUCTOR</label>
+        <input id="inp-cedula" placeholder="Ej: 12345678" type="text" autocomplete="off"></div>
+      <div id="conductor-info"></div>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button class="btn btn-secondary" id="btn-back0">← Atrás</button>
+        <button class="btn btn-primary" id="btn-buscar-cond">BUSCAR →</button>
+      </div>`;
+    document.getElementById('btn-back0').addEventListener('click', renderStep1);
+    document.getElementById('btn-buscar-cond').addEventListener('click', async () => {
+      try {
+        wiz.conductor = await api('buscarConductor', {cedula: document.getElementById('inp-cedula').value.trim()});
+        document.getElementById('conductor-info').innerHTML =
+          `<div class="alert alert-green" style="margin-top:8px">✓ <b>${wiz.conductor.Nombre}</b> — Cédula: ${wiz.conductor.Cedula}</div>`;
+        setTimeout(renderStep3, 700);
+      } catch(e){ toast(e.message,'error'); }
+    });
+  }
+
+  // STEP 3 — Vehículo
+  function renderStep3() {
+    setStep(3);
+    document.getElementById('wizard-body').innerHTML = `
+      <div class="alert alert-green" style="margin-bottom:10px">✓ Conductor: <b>${wiz.conductor.Nombre}</b></div>
+      <div class="field"><label>PLACA DEL VEHÍCULO</label>
+        <input id="inp-placa" placeholder="Ej: ABC-123" type="text" style="text-transform:uppercase" autocomplete="off"></div>
+      <div id="vehiculo-info"></div>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button class="btn btn-secondary" id="btn-back1">← Atrás</button>
+        <button class="btn btn-primary" id="btn-buscar-veh">BUSCAR →</button>
+      </div>`;
+    document.getElementById('btn-back1').addEventListener('click', renderStep2);
+    document.getElementById('btn-buscar-veh').addEventListener('click', async () => {
+      try {
+        const v = await api('buscarVehiculo', {placa: document.getElementById('inp-placa').value.trim()});
+        if (String(v.id_contratista) !== String(wiz.conductor.id_contratista)) {
+          toast(`⚠️ El vehículo pertenece a "${v.contratista}" pero el conductor es de otro contratista.`, 'error');
+          return;
+        }
+        wiz.vehiculo = v;
+        document.getElementById('vehiculo-info').innerHTML =
+          `<div class="alert alert-green" style="margin-top:8px">✓ <b>${wiz.vehiculo.Modelo}</b> — Placa: ${wiz.vehiculo.Placa} — Tara: ${Number(wiz.vehiculo.Tara).toLocaleString()} kg<br><span style="color:var(--text2);font-size:11px">Contratista: ${wiz.vehiculo.contratista}</span></div>`;
+        setTimeout(renderStep4, 700);
+      } catch(e){ toast(e.message,'error'); }
+    });
+  }
+
+  // STEP 4 — Pesaje
+  function renderStep4() {
+    setStep(4);
+    document.getElementById('wizard-body').innerHTML = `
+      <div class="alert alert-green" style="margin-bottom:10px">✓ Vehículo: <b>${wiz.vehiculo.Placa}</b> — Tara: ${Number(wiz.vehiculo.Tara).toLocaleString()} kg</div>
+      <div class="field">
+        <label>PESO BRUTO (kg) <span style="color:var(--text2);font-weight:400">— peso total del vehículo cargado en báscula</span></label>
+        <input id="inp-peso" type="number" placeholder="Ej: 12500" min="1">
+      </div>
+      <div id="peso-calc"></div>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button class="btn btn-secondary" id="btn-back2b">← Atrás</button>
+        <button class="btn btn-primary" id="btn-confirmar-peso">SIGUIENTE →</button>
+      </div>`;
+    document.getElementById('btn-back2b').addEventListener('click', renderStep3);
+    document.getElementById('inp-peso').addEventListener('input', function() {
+      const pb = Number(this.value);
+      const tara = Number(wiz.vehiculo.Tara);
+      const neto = pb - tara;
+      const calc = document.getElementById('peso-calc');
+      if (neto > 0) {
+        calc.innerHTML = `
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:10px;margin-top:8px;font-size:12px">
+            ${row('Peso bruto', pb.toLocaleString()+' kg')}
+            ${row('Tara vehículo', tara.toLocaleString()+' kg')}
+            ${row('Peso neto a descargar', '<b style="color:var(--green);font-size:14px">'+neto.toLocaleString()+' kg</b>')}
+          </div>`;
+      } else if (pb > 0) {
+        calc.innerHTML = `<div class="alert alert-red" style="margin-top:8px">⚠️ Peso bruto debe ser mayor que la tara (${tara.toLocaleString()} kg)</div>`;
+      } else { calc.innerHTML = ''; }
+    });
+    document.getElementById('btn-confirmar-peso').addEventListener('click', () => {
+      const pb = Number(document.getElementById('inp-peso').value);
+      const neto = pb - Number(wiz.vehiculo.Tara);
+      if (!pb || neto <= 0) { toast('Ingresa un peso bruto válido (mayor que la tara)','error'); return; }
+      wiz.peso_bruto = pb;
+      renderStep5();
+    });
+  }
+
+  // STEP 5 — Tipo residuo: el sistema asigna la celda con más espacio para el peso neto
+  async function renderStep5() {
+    setStep(5);
+    const neto = wiz.peso_bruto - Number(wiz.vehiculo.Tara);
+    document.getElementById('wizard-body').innerHTML = `<div style="color:var(--text2);font-size:12px;padding:8px 0">⏳ Cargando tipos de residuo...</div>`;
+    const tipos = await api('listarTiposResiduo');
+    document.getElementById('wizard-body').innerHTML = `
+      <div class="alert alert-green" style="margin-bottom:10px">✓ Peso neto a descargar: <b>${neto.toLocaleString()} kg</b></div>
+      <div class="field">
+        <label>TIPO DE RESIDUO <span style="color:var(--text2);font-weight:400">(un solo tipo por viaje)</span></label>
+        <select id="sel-tipo">
+          <option value="">— Seleccione —</option>
+          ${tipos.map(t=>`<option value="${t.id_tipoResiduo}">${t.Nombre}</option>`).join('')}
+        </select>
+      </div>
+      <div id="celda-asignada"></div>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button class="btn btn-secondary" id="btn-back3b">← Atrás</button>
+        <button class="btn btn-primary" id="btn-confirmar-tipo" disabled>SIGUIENTE →</button>
+      </div>`;
+    document.getElementById('btn-back3b').addEventListener('click', renderStep4);
+
+    document.getElementById('sel-tipo').addEventListener('change', async function() {
+      const id = this.value;
+      const btnNext = document.getElementById('btn-confirmar-tipo');
+      const info = document.getElementById('celda-asignada');
+      if (!id) { info.innerHTML=''; btnNext.disabled=true; return; }
+      info.innerHTML = `<div style="color:var(--text2);font-size:12px;padding:6px 0">⏳ Calculando distribución de carga para ${neto.toLocaleString()} kg...</div>`;
+      btnNext.disabled = true;
+      try {
+        wiz.tipoResiduo = {id, nombre: this.options[this.selectedIndex].text};
+
+        // Obtener TODAS las celdas activas para este tipo, ordenadas por menor acumulado
+        const todasCeldas = await api('listarTodosTiposCelda');
+        const todasCeldasData = await api('listarCeldas');
+
+        // Normalizar activo: activo si no es explicitamente 0
+        const esActivo = v => Number(v ?? 1) !== 0;
+
+        const elegibles = todasCeldas
+          .filter(tc => {
+            const idTipo = String(tc.id_tipoResiduo ?? tc.id_tiporesiduo ?? '').trim();
+            return idTipo === String(id).trim() && esActivo(tc.Activo ?? tc.activo);
+          })
+          .map(tc => {
+            const idCelda = String(tc.id_celda ?? tc.id_Celda ?? '').trim();
+            return todasCeldasData.find(c => String(c.id_celda ?? '').trim() === idCelda);
+          })
+          .filter(c => c && esActivo(c.Activo) && Number(c.Capacidad_max) > Number(c.Peso_acumulado))
+          // Eliminar duplicados por id_celda (puede haber 2 tipos en misma celda)
+          .filter((c, idx, arr) => arr.findIndex(x => String(x.id_celda) === String(c.id_celda)) === idx)
+          .sort((a,b) => Number(a.Peso_acumulado) - Number(b.Peso_acumulado));
+
+        if (!elegibles.length) {
+          info.innerHTML = `<div class="alert alert-red" style="margin-top:6px">⚠️ No hay celdas disponibles para ${wiz.tipoResiduo.nombre}</div>`;
+          wiz.celda = null; return;
+        }
+
+        // Distribuir carga entre celdas hasta cubrir el peso neto
+        let restante = neto;
+        const distribucion = [];
+        for (const celda of elegibles) {
+          if (restante <= 0) break;
+          const disponible = Number(celda.Capacidad_max) - Number(celda.Peso_acumulado);
+          if (disponible <= 0) continue; // saltar celdas sin espacio real
+          const asignar = Math.min(restante, disponible);
+          distribucion.push({ celda, asignar });
+          restante -= asignar;
+        }
+
+        wiz.celda = distribucion[0].celda;         // celda principal
+        wiz.distribucion = distribucion;            // distribución completa
+        wiz.pesoNoAsignado = restante > 0 ? restante : 0;
+
+        const cubreTotal = restante <= 0;
+
+        const filas = distribucion.map(d => {
+          const pct = Math.round(Number(d.celda.Peso_acumulado)/Number(d.celda.Capacidad_max)*100);
+          const bcls = pct>=90?'badge-red':pct>=60?'badge-amber':'badge-green';
+          return `<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px">
+            <span style="font-weight:600">${d.celda.Nombre}</span>
+            <span class="badge ${bcls}" style="font-size:9px">${pct}% llena</span>
+            <span style="color:var(--primary);font-weight:600">${d.asignar.toLocaleString()} kg</span>
+          </div>`;
+        }).join('');
+
+        info.innerHTML = `
+          <div class="alert ${cubreTotal?'alert-green':'alert-red'}" style="margin-top:6px">
+            ${cubreTotal
+              ? `✓ Carga distribuida en ${distribucion.length} celda${distribucion.length>1?'s':''}`
+              : `⚠️ Capacidad insuficiente — ${restante.toLocaleString()} kg no pueden ser asignados`}
+          </div>
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:10px;margin-top:6px">
+            <div style="font-size:10px;font-family:var(--mono);color:var(--text3);letter-spacing:1px;margin-bottom:6px">DISTRIBUCIÓN DE DESCARGA</div>
+            ${filas}
+            <div style="display:flex;justify-content:space-between;padding:5px 0;font-size:12px;font-weight:600;margin-top:4px">
+              <span>Total asignado</span>
+              <span style="color:var(--primary)">${(neto-Math.max(restante,0)).toLocaleString()} / ${neto.toLocaleString()} kg</span>
+            </div>
+          </div>`;
+        btnNext.disabled = !cubreTotal && distribucion.length === 0;
+      } catch(e) {
+        info.innerHTML = `<div class="alert alert-red" style="margin-top:6px">⚠️ ${e.message}</div>`;
+        wiz.celda = null;
+      }
+    });
+    document.getElementById('btn-confirmar-tipo').addEventListener('click', renderStep6);
+  }
+
+  // STEP 6 — Confirmar + alerta sobrepeso
+  async function renderStep6() {
+    setStep(6);
+    const pb = wiz.peso_bruto;
+    const tara = Number(wiz.vehiculo.Tara);
+    const neto = pb - tara;
+    const dist = wiz.distribucion || [{celda: wiz.celda, asignar: neto}];
+
+    // Verificar límite autorizado para mostrar advertencia
+    let alertaSobrepeso = '';
+    try {
+      const limite = await api('verificarLimite', {
+        id_tipoVehiculo: wiz.vehiculo.id_tipoVehiculo,
+        id_tipoResiduo: wiz.tipoResiduo.id,
+        peso_neto: neto
+      });
+      if (limite.sobrepeso) {
+        alertaSobrepeso = `<div class="alert alert-red" style="margin-bottom:12px">
+          ⚠️ <b>SOBREPESO DETECTADO</b> — Exceso: ${limite.exceso.toLocaleString()} kg sobre el límite de ${limite.peso_max.toLocaleString()} kg.<br>
+          <span style="font-size:11px">El vehículo puede ingresar y descargar. Se generará multa en la liquidación mensual.</span>
+        </div>`;
+      }
+    } catch(e) { /* si no hay límite configurado, continúa sin alerta */ }
+
+    const filasDist = dist.map(d =>
+      `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px">
+        <span style="color:var(--text2)">Celda: <b>${d.celda.Nombre}</b></span>
+        <span style="color:var(--primary);font-weight:600">${d.asignar.toLocaleString()} kg</span>
+      </div>`
+    ).join('');
+
+    document.getElementById('wizard-body').innerHTML = `
+      ${alertaSobrepeso}
+      <div style="margin-bottom:14px">
+        <div class="page-title" style="font-size:11px;margin-bottom:10px">RESUMEN DE INGRESO</div>
+        ${row('Conductor', wiz.conductor.Nombre)}
+        ${row('Vehículo', wiz.vehiculo.Modelo + ' — ' + wiz.vehiculo.Placa)}
+        ${row('Contratista', wiz.vehiculo.contratista)}
+        ${row('Tipo de residuo', wiz.tipoResiduo.nombre)}
+        ${row('Peso bruto', pb.toLocaleString() + ' kg')}
+        ${row('Tara', tara.toLocaleString() + ' kg')}
+        ${row('Peso neto', '<b style="color:var(--success);font-size:15px">' + neto.toLocaleString() + ' kg</b>')}
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:10px;margin-bottom:14px">
+        <div style="font-size:10px;font-family:var(--mono);color:var(--text3);letter-spacing:1px;margin-bottom:6px">
+          DESCARGA EN ${dist.length} CELDA${dist.length>1?'S':''}
+        </div>
+        ${filasDist}
+      </div>
+      <div class="field" style="margin-top:12px">
+        <label>Observaciones <span style="color:var(--text3);font-weight:400">(opcional)</span></label>
+        <textarea id="inp-obs" rows="2" placeholder="Ej: Vehículo en buen estado, sin novedad..." style="resize:vertical"></textarea>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-secondary" id="btn-cancel-ing"><i class="fa-solid fa-xmark"></i> Cancelar</button>
+        <button class="btn btn-primary" id="btn-confirm-ing"><i class="fa-solid fa-check"></i> Confirmar Ingreso</button>
+      </div>`;
+    document.getElementById('btn-cancel-ing').addEventListener('click', () => { wiz.conductor=null; wiz.vehiculo=null; renderStep1(); });
+    document.getElementById('btn-confirm-ing').addEventListener('click', async () => {
+      const btn = document.getElementById('btn-confirm-ing');
+      btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Guardando...';
+      try {
+        // Enviar la celda principal y la distribución completa
+        const res = await api('registrarIngreso', {
+          id_centro: wiz.centro?.id_centro || 1,
+          id_vehiculo: wiz.vehiculo.id_vehiculo,
+          id_conductor: wiz.conductor.id_conductor,
+          id_tipoResiduo: wiz.tipoResiduo.id,
+          id_celda: dist[0].celda.id_celda,
+          celdas_distribucion: dist.map(d => ({id_celda: d.celda.id_celda, kg: d.asignar})),
+          id_usuario: S.user.id_usuario,
+          usuario_nombre: S.user.usuario,
+          peso_bruto: wiz.peso_bruto,
+          observaciones: document.getElementById('inp-obs')?.value || '',
+        });
+        runFlow('registrarIngreso');
+        toast(`✓ Ingreso #${res.id_ingreso} registrado. Peso neto: ${Number(res.peso_neto).toLocaleString()} kg en ${dist.length} celda${dist.length>1?'s':''}`);
+        if (res.sobrepeso) setTimeout(()=>toast(`⚠️ Multa por sobrepeso: ${Number(res.exceso).toLocaleString()} kg de exceso`, 'error'), 1200);
+        setTimeout(renderStep1, 1800);
+      } catch(e) { btn.disabled=false; btn.innerHTML='<i class="fa-solid fa-check"></i> Confirmar Ingreso'; toast(e.message,'error'); }
+    });
+  }
+
+  renderStep1();
+}
+
+// ----- CELDAS -----
+async function screenCeldas(c) {
+  c.innerHTML = `<div class="fadein">
+    <div class="page-header">
+      <div><div class="page-title"><i class="fa-solid fa-layer-group"></i> Gestión de Celdas</div></div>
+      <button class="btn btn-primary" id="btn-nueva-celda">+ NUEVA CELDA</button>
+    </div>
+    <div id="celdas-table">Cargando...</div>
+  </div>`;
+
+  // Pre-carga catálogos
+  const [unidades, tipos, centros] = await Promise.all([
+    api('listarUnidades'), api('listarTiposResiduo'), api('listarCentros')
+  ]);
+
+  async function load() {
+    const [celdas, unidades] = await Promise.all([api('listarCeldas'), api('listarUnidades')]);
+    const uMap = {};
+    unidades.forEach(u => { uMap[u.id_unidadMedida] = u; });
+    document.getElementById('celdas-table').innerHTML = `
+      <div class="table-wrap"><table>
+        <thead><tr><th>ID</th><th>NOMBRE</th><th>CENTRO</th><th>UNIDAD</th><th>CAP. MÁX</th><th>ACUMULADO</th><th>OCUPACIÓN</th><th>ESTADO</th><th></th></tr></thead>
+        <tbody>${celdas.map(ce => {
+          const u    = uMap[ce.id_unidadMedida] || {Simbolo:'kg', Nombre:'Kilogramo'};
+          const pct = ce.Capacidad_max>0 ? Math.round(Number(ce.Peso_acumulado)/Number(ce.Capacidad_max)*100) : 0;
+          const pcls = pct>=90?'high':pct>=60?'mid':'low';
+          const bcls = pct>=90?'badge-red':pct>=60?'badge-amber':'badge-green';
+          return `<tr>
+            <td style="font-family:var(--mono);color:var(--text2)">${ce.id_celda}</td>
+            <td><b>${ce.Nombre}</b></td>
+            <td style="font-size:11px;color:var(--text2)">${ce.centro_nombre||'—'}</td>
+            <td><span class="badge badge-blue" style="font-size:10px">${u.Simbolo}</span></td>
+            <td>${Number(ce.Capacidad_max).toLocaleString()} kg</td>
+            <td>${Number(ce.Peso_acumulado).toLocaleString()} kg</td>
+            <td style="min-width:100px">
+              <div style="display:flex;align-items:center;gap:6px">
+                <div class="progress" style="flex:1"><div class="progress-fill ${pcls}" style="width:${pct}%"></div></div>
+                <span class="badge ${bcls}" style="font-size:9px">${pct}%</span>
+              </div>
+            </td>
+            <td><span class="badge ${Number(ce.Activo)?'badge-green':'badge-red'}">${Number(ce.Activo)?'ACTIVA':'INACTIVA'}</span></td>
+            <td style="display:flex;gap:4px">
+              <button class="btn btn-secondary" style="font-size:10px;padding:4px 8px" data-detail="${ce.id_celda}">VER</button>
+              <button class="btn btn-secondary" style="font-size:10px;padding:4px 8px" data-edit="${ce.id_celda}" data-nombre="${ce.Nombre}" data-cap="${ce.Capacidad_max}" data-activo="${ce.Activo}">EDITAR</button>
+            </td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table></div>`;
+
+    // Botón VER — modal de detalles
+    document.querySelectorAll('[data-detail]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.detail;
+        const celda = (await api('listarCeldas')).find(c=>String(c.id_celda)===String(id));
+        const tiposCelda = await api('listarTiposCelda', {id_celda: id});
+        const pct = celda.Capacidad_max>0 ? Math.round(Number(celda.Peso_acumulado)/Number(celda.Capacidad_max)*100) : 0;
+        const bcls = pct>=90?'badge-red':pct>=60?'badge-amber':'badge-green';
+        openModal(`
+          <div class="modal-title"><i class="fa-solid fa-layer-group"></i> Detalle Celda — ${celda.Nombre}</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+            <div class="stat-card"><div class="stat-val">${Number(celda.Capacidad_max).toLocaleString()}</div><div class="stat-label">Capacidad máx (kg)</div></div>
+            <div class="stat-card"><div class="stat-val" style="color:${pct>=90?'var(--red)':pct>=60?'var(--amber)':'var(--green)'}">${pct}%</div><div class="stat-label">Ocupación actual</div></div>
+          </div>
+          <div class="progress" style="margin-bottom:12px;height:10px">
+            <div class="progress-fill ${pct>=90?'high':pct>=60?'mid':'low'}" style="width:${pct}%"></div>
+          </div>
+          <div style="font-size:12px;margin-bottom:14px">
+            <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border)">
+              <span style="color:var(--text2)">Peso acumulado</span><span>${Number(celda.Peso_acumulado).toLocaleString()} kg</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border)">
+              <span style="color:var(--text2)">Disponible</span><span style="color:var(--green)">${(Number(celda.Capacidad_max)-Number(celda.Peso_acumulado)).toLocaleString()} kg</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border)">
+              <span style="color:var(--text2)">Estado</span><span><span class="badge ${Number(celda.Activo)?'badge-green':'badge-red'}">${Number(celda.Activo)?'ACTIVA':'INACTIVA'}</span></span>
+            </div>
+          </div>
+          <div style="font-size:11px;font-family:var(--mono);color:var(--text2);margin-bottom:6px;letter-spacing:1px">TIPOS DE RESIDUO AUTORIZADOS</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">
+            ${tiposCelda.length ? tiposCelda.map(t=>`<span class="badge badge-blue">${t.Nombre}</span>`).join('') : '<span style="color:var(--text3);font-size:12px">Sin tipos asignados — configura en EDITAR</span>'}
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" data-close>CERRAR</button>
+          </div>`);
+      });
+    });
+
+    // Botón EDITAR
+    document.querySelectorAll('[data-edit]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const idCelda  = btn.dataset.edit;
+        const tiposC   = await api('listarTiposCelda', {id_celda: idCelda});
+        const tiposOpts = tipos.filter(t => !tiposC.find(tc => String(tc.id_tipoResiduo) === String(t.id_tipoResiduo)));
+        const tiposBadges = tiposC.length
+          ? tiposC.map(t => `<span class="badge badge-blue" style="cursor:pointer" title="Clic para remover" data-rm-tipo="${t.id_celdaResiduo}">${t.Nombre} ✕</span>`).join('')
+          : '<span style="color:var(--text3);font-size:12px">Sin tipos asignados</span>';
+        openModal(`
+          <div class="modal-title"><i class="fa-solid fa-layer-group"></i> Editar Celda — ${btn.dataset.nombre}</div>
+          <div class="field"><label>NOMBRE</label><input id="m-nombre" value="${btn.dataset.nombre}"></div>
+          <div class="field"><label>CAPACIDAD MÁX (kg)</label><input id="m-cap" type="number" value="${btn.dataset.cap}"></div>
+          <div class="field"><label>ESTADO</label>
+            <select id="m-activo">
+              <option value="1" ${Number(btn.dataset.activo)?'selected':''}>ACTIVA</option>
+              <option value="0" ${!Number(btn.dataset.activo)?'selected':''}>INACTIVA</option>
+            </select>
+          </div>
+          <div style="border-top:1px solid var(--border);margin:16px 0;padding-top:14px">
+            <div style="font-size:11px;font-family:var(--mono);color:var(--text2);letter-spacing:1px;margin-bottom:8px">TIPOS DE RESIDUO AUTORIZADOS</div>
+            <div id="tipos-badges" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">${tiposBadges}</div>
+            ${tiposOpts.length ? `
+            <div style="display:flex;gap:8px">
+              <select id="m-tipo-add" style="flex:1;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:7px;border-radius:var(--r);font-size:12px">
+                <option value="">+ Agregar tipo de residuo…</option>
+                ${tiposOpts.map(t=>`<option value="${t.id_tipoResiduo}">${t.Nombre}</option>`).join('')}
+              </select>
+              <button class="btn btn-secondary" id="btn-add-tipo" style="white-space:nowrap">ASIGNAR</button>
+            </div>` : '<div style="font-size:11px;color:var(--text3)">Todos los tipos ya están asignados</div>'}
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" data-close>CANCELAR</button>
+            <button class="btn btn-primary" data-confirm>GUARDAR</button>
+          </div>`, async () => {
+          await api('editarCelda', {
+            id_celda: idCelda,
+            nombre: document.getElementById('m-nombre').value,
+            capacidad_max: document.getElementById('m-cap').value,
+            activo: document.getElementById('m-activo').value
+          });
+          toast('Celda actualizada'); runFlow('gestionCeldas'); load();
+        });
+        // Asignar tipo
+        document.getElementById('btn-add-tipo')?.addEventListener('click', async () => {
+          const v = document.getElementById('m-tipo-add')?.value;
+          if (!v) return;
+          await api('asignarTipoResiduo', {id_celda: idCelda, id_tipoResiduo: v});
+          toast('Tipo asignado ✓'); closeModal(); load();
+        });
+        // Remover tipo (marcar inactivo)
+        document.querySelectorAll('[data-rm-tipo]').forEach(b => {
+          b.addEventListener('click', async () => {
+            const rel = DB.Celda_Tipo_residuo.find(r => r.id_celdaResiduo === Number(b.dataset.rmTipo));
+            if (rel) { rel.Activo = 0; toast('Tipo removido'); closeModal(); load(); }
+          });
+        });
+      });
+    });
+  }
+
+  document.getElementById('btn-nueva-celda').addEventListener('click', () => {
+    const uOpts = unidades.map(u=>`<option value="${u.id_unidadMedida}" data-factor="${u.Factor_a_kg}" data-sim="${u.Simbolo}">${u.Nombre} (${u.Simbolo})</option>`).join('');
+    openModal(`
+      <div class="modal-title"><i class="fa-solid fa-layer-group"></i> Nueva Celda</div>
+      <div class="field"><label>NOMBRE</label><input id="m-nombre" placeholder="Celda X-00"></div>
+      <div class="field"><label>CENTRO DE DISPOSICIÓN</label>
+        <select id="m-centro">
+          ${centros.map(ct=>`<option value="${ct.id_centro}">${ct.Nombre}</option>`).join('')}
+        </select>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="field"><label>UNIDAD DE MEDIDA</label>
+          <select id="m-unidad">${uOpts}</select>
+        </div>
+        <div class="field"><label id="m-cap-label">CAPACIDAD MÁX</label>
+          <input id="m-cap" type="number" placeholder="10000">
+        </div>
+      </div>
+      <div id="m-cap-hint" style="font-size:11px;color:var(--primary);background:var(--primary-light);padding:7px 10px;border-radius:var(--r);margin-top:-8px;margin-bottom:8px;display:none"></div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close>CANCELAR</button>
+        <button class="btn btn-primary" data-confirm>CREAR</button>
+      </div>`, async () => {
+      await api('crearCelda', {
+        nombre: document.getElementById('m-nombre').value,
+        capacidad_max: document.getElementById('m-cap').value,
+        id_unidadMedida: document.getElementById('m-unidad').value,
+        id_centro: document.getElementById('m-centro').value,
+      });
+      toast('Celda creada'); runFlow('gestionCeldas'); load();
+    });
+    // Actualizar hint de conversión al cambiar unidad o valor
+    function updateHint() {
+      const sel   = document.getElementById('m-unidad');
+      const opt   = sel.options[sel.selectedIndex];
+      const factor = Number(opt?.dataset.factor || 1);
+      const sim   = opt?.dataset.sim || 'kg';
+      const val   = Number(document.getElementById('m-cap')?.value || 0);
+      const hint  = document.getElementById('m-cap-hint');
+      const label = document.getElementById('m-cap-label');
+      if (label) label.textContent = 'CAPACIDAD MÁX (' + sim + ')';
+      if (hint) {
+        if (factor !== 1 && val > 0) {
+          hint.textContent = '✓ Equivale a ' + (val * factor).toLocaleString('es-CO') + ' kg en el sistema';
+          hint.style.display = 'block';
+        } else if (factor !== 1) {
+          hint.textContent = 'Ingresa el valor en ' + sim + ' — el sistema convierte automáticamente a kg';
+          hint.style.display = 'block';
+        } else {
+          hint.style.display = 'none';
+        }
+      }
+    }
+    setTimeout(() => {
+      document.getElementById('m-unidad')?.addEventListener('change', updateHint);
+      document.getElementById('m-cap')?.addEventListener('input', updateHint);
+      updateHint();
+    }, 50);
+  });
+
+  await load();
+}
+
+// ----- OCUPACION -----
+async function screenOcupacion(c) {
+  c.innerHTML = `<div class="fadein">
+    <div class="page-header">
+      <div><div class="page-title"><i class="fa-solid fa-chart-pie"></i> Ocupación de Celdas</div></div>
+      <button class="btn btn-secondary" id="btn-reload-ocup" style="font-size:11px">↺ ACTUALIZAR</button>
+    </div>
+    <div id="ocup-content">Cargando...</div>
+  </div>`;
+
+  async function load() {
+    const [celdas, tiposCelda, tipos] = await Promise.all([
+      api('ocupacionCeldas'), api('listarTodosTiposCelda'), api('listarTiposResiduo')
+    ]);
+    const tiposMap = {};
+    tipos.forEach(t => { tiposMap[t.id_tipoResiduo] = t.Nombre; });
+
+    // Paleta de colores por tipo de residuo
+    const colores = [
+      'badge-blue','badge-green','badge-amber','badge-red',
+      {bg:'#f3e8ff',color:'#7c3aed',border:'#ddd6fe'}, // púrpura
+      {bg:'#fff7ed',color:'#c2410c',border:'#fed7aa'}, // naranja
+    ];
+    const colorMap = {};
+    tipos.forEach((t,i) => { colorMap[t.id_tipoResiduo] = i; });
+
+    function tipoBadge(idTipo) {
+      const idx = colorMap[idTipo] ?? 0;
+      const n = tiposMap[idTipo] || idTipo;
+      const presets = ['badge-blue','badge-green','badge-amber','badge-red'];
+      if (idx < presets.length) return `<span class="badge ${presets[idx]}" style="font-size:8px">${n}</span>`;
+      const custom = [{bg:'#f3e8ff',color:'#7c3aed',border:'#ddd6fe'},{bg:'#fff7ed',color:'#c2410c',border:'#fed7aa'}];
+      const c = custom[(idx - presets.length) % custom.length];
+      return `<span class="badge" style="background:${c.bg};color:${c.color};border-color:${c.border};font-size:8px">${n}</span>`;
+    }
+
+    document.getElementById('ocup-content').innerHTML = `
+      <div class="card-grid">
+        ${celdas.map(ce => {
+          const p = ce.porcentaje || (ce.Capacidad_max>0 ? Math.round(Number(ce.Peso_acumulado)/Number(ce.Capacidad_max)*100) : 0);
+          const cls = p>=90?'high':p>=60?'mid':'low';
+          const bcls = p>=90?'badge-red':p>=60?'badge-amber':'badge-green';
+          // Borde de la card según ocupación
+          const cardBorder = p>=90?'var(--danger)':p>=60?'var(--warn)':'var(--border)';
+          const tiposDeCelda = (tiposCelda||[]).filter(tc => {
+            const idCelda = tc.id_celda ?? tc.id_Celda;
+            const activo  = tc.Activo ?? tc.activo;
+            return String(idCelda)===String(ce.id_celda) && Number(activo)===1;
+          });
+          // Filas de kg por tipo de residuo
+          const filasTipo = tiposDeCelda.map(tc => {
+            const idTipo = tc.id_tipoResiduo ?? tc.id_tiporesiduo;
+            const pesoTipo = Number(tc.Peso_acumulado ?? tc.peso_acumulado ?? 0);
+            const capTotal = Number(ce.Capacidad_max) || 1;
+            const pctTipo  = Math.round(pesoTipo / capTotal * 100);
+            return `<div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0;font-size:11px">
+              ${tipoBadge(idTipo)}
+              <span style="font-family:var(--mono);font-weight:600">${pesoTipo.toLocaleString()} kg <span style="color:var(--text3)">(${pctTipo}%)</span></span>
+            </div>`;
+          }).join('');
+
+          return `<div class="stat-card" style="cursor:default;border-color:${cardBorder};border-width:1.5px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+              <div style="font-size:13px;font-weight:600">${ce.Nombre}</div>
+              <div style="display:flex;align-items:center;gap:6px">
+                <span class="badge ${bcls}">${p}%</span>
+                ${Number(ce.Activo)===0?'<span class="badge badge-red" style="font-size:9px">INACTIVA</span>':''}
+              </div>
+            </div>
+            <div class="progress" style="margin-bottom:6px"><div class="progress-fill ${cls}" style="width:${p}%"></div></div>
+            <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text2);margin-bottom:8px">
+              <span><b>${Number(ce.Peso_acumulado).toLocaleString()}</b> kg acumulados</span>
+              <span>cap. ${Number(ce.Capacidad_max).toLocaleString()} kg</span>
+            </div>
+            ${tiposDeCelda.length ? `
+            <div style="border-top:1px solid var(--border);padding-top:6px">
+              <div style="font-size:9px;font-family:var(--mono);color:var(--text3);letter-spacing:1px;margin-bottom:4px">KG POR TIPO DE RESIDUO</div>
+              ${filasTipo}
+            </div>` : '<div style="font-size:10px;color:var(--text3)">Sin tipos asignados</div>'}
+            <div style="font-size:11px;color:var(--text2);margin-top:6px;border-top:1px solid var(--border);padding-top:4px">
+              Disponible: <span style="color:${p>=90?'var(--danger)':'var(--success)'};font-weight:600">${(Number(ce.Capacidad_max)-Number(ce.Peso_acumulado)).toLocaleString()} kg</span>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>`;
+  }
+
+  runFlow('ocupacion');
+  document.getElementById('btn-reload-ocup').addEventListener('click', () => { runFlow('ocupacion'); load(); });
+  await load();
+}
+
+// ----- CONTRATISTAS -----
+async function screenContratistas(c) {
+  c.innerHTML = `<div class="fadein">
+    <div class="page-header">
+      <div><div class="page-title"><i class="fa-solid fa-building"></i> Contratistas, Vehículos y Conductores</div></div>
+      <button class="btn btn-primary" id="btn-nuevo-con">+ CONTRATISTA</button>
+    </div>
+    <div id="con-table">Cargando...</div>
+  </div>`;
+
+  async function load() {
+    const [contratistas, vehiculos, conductores, tiposV] = await Promise.all([
+      api('listarContratistas'), api('listarVehiculos'), api('listarConductores'), api('listarTiposVehiculo')
+    ]);
+    const tiposVMap = {};
+    tiposV.forEach(t => { tiposVMap[t.id_tipoVehiculo] = t.Nombre; });
+
+    document.getElementById('con-table').innerHTML = contratistas.map(con => {
+      const vehs = vehiculos.filter(v=>String(v.id_contratista)===String(con.id_contratista));
+      const conds = conductores.filter(cd=>String(cd.id_contratista)===String(con.id_contratista));
+      return `
+      <div class="card" style="margin-bottom:14px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+          <div>
+            <div style="font-size:14px;font-weight:600">${con.Razon_social}</div>
+            <div style="font-size:11px;color:var(--text2);margin-top:2px">NIT: ${con.NIT||'—'} &nbsp;|&nbsp; Tel: ${con.Telefono||'—'} &nbsp;|&nbsp; Contacto: ${con.Nombre_contacto||'—'}</div>
+          </div>
+          <div style="display:flex;gap:6px;align-items:center">
+            <span class="badge ${Number(con.Activo)?'badge-green':'badge-red'}">${Number(con.Activo)?'ACTIVO':'INACTIVO'}</span>
+            <button class="btn btn-secondary" style="font-size:10px;padding:4px 8px"
+              data-edit-con="${con.id_contratista}"
+              data-rs="${con.Razon_social}" data-nit="${con.NIT||''}"
+              data-tel="${con.Telefono||''}" data-ctc="${con.Nombre_contacto||''}"
+              data-activo-con="${con.Activo}">EDITAR</button>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <!-- Vehículos -->
+          <div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+              <div style="font-size:10px;font-family:var(--mono);color:var(--text3);letter-spacing:1px">VEHÍCULOS (${vehs.length})</div>
+              <button class="btn btn-secondary" style="font-size:9px;padding:3px 7px" data-nuevo-veh="${con.id_contratista}">+ AGREGAR</button>
+            </div>
+            ${vehs.length ? `<div class="table-wrap"><table>
+              <thead><tr><th>PLACA</th><th>MODELO</th><th>TIPO</th><th>TARA</th><th></th></tr></thead>
+              <tbody>${vehs.map(v=>`<tr>
+                <td style="font-family:var(--mono)">${v.Placa}</td>
+                <td style="font-size:11px">${v.Modelo||'—'}</td>
+                <td style="font-size:10px">${tiposVMap[v.id_tipoVehiculo]||'—'}</td>
+                <td style="font-size:11px">${Number(v.Tara).toLocaleString()} kg</td>
+                <td><button class="btn btn-secondary" style="font-size:9px;padding:2px 6px"
+                  data-edit-veh="${v.id_vehiculo}" data-placa="${v.Placa}"
+                  data-modelo="${v.Modelo||''}" data-tara="${v.Tara}"
+                  data-tipo-veh="${v.id_tipoVehiculo}" data-activo-veh="${v.Activo}"
+                  data-con-id="${v.id_contratista}">✏️</button></td>
+              </tr>`).join('')}</tbody>
+            </table></div>` : '<div style="font-size:11px;color:var(--text3);padding:4px 0">Sin vehículos registrados</div>'}
+          </div>
+          <!-- Conductores -->
+          <div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+              <div style="font-size:10px;font-family:var(--mono);color:var(--text3);letter-spacing:1px">CONDUCTORES (${conds.length})</div>
+              <button class="btn btn-secondary" style="font-size:9px;padding:3px 7px" data-nuevo-cond="${con.id_contratista}">+ AGREGAR</button>
+            </div>
+            ${conds.length ? `<div class="table-wrap"><table>
+              <thead><tr><th>CÉDULA</th><th>NOMBRE</th><th>TEL</th><th></th></tr></thead>
+              <tbody>${conds.map(cd=>`<tr>
+                <td style="font-family:var(--mono);font-size:11px">${cd.Cedula}</td>
+                <td style="font-size:11px">${cd.Nombre}</td>
+                <td style="font-size:11px">${cd.Telefono||'—'}</td>
+                <td><button class="btn btn-secondary" style="font-size:9px;padding:2px 6px"
+                  data-edit-cond="${cd.id_conductor}" data-cedula="${cd.Cedula}"
+                  data-nombre-cond="${cd.Nombre}" data-tel-cond="${cd.Telefono||''}"
+                  data-activo-cond="${cd.Activo}">✏️</button></td>
+              </tr>`).join('')}</tbody>
+            </table></div>` : '<div style="font-size:11px;color:var(--text3);padding:4px 0">Sin conductores registrados</div>'}
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+
+    // Editar contratista
+    document.querySelectorAll('[data-edit-con]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        openModal(`
+          <div class="modal-title">EDITAR CONTRATISTA</div>
+          <div class="field"><label>RAZÓN SOCIAL</label><input id="m-rs" value="${btn.dataset.rs}"></div>
+          <div class="field"><label>NIT</label><input id="m-nit" value="${btn.dataset.nit}"></div>
+          <div class="field"><label>TELÉFONO</label><input id="m-tel" value="${btn.dataset.tel}"></div>
+          <div class="field"><label>CONTACTO</label><input id="m-ctc" value="${btn.dataset.ctc}"></div>
+          <div class="field"><label>ESTADO</label>
+            <select id="m-activo">
+              <option value="1" ${Number(btn.dataset.activoCon)?'selected':''}>ACTIVO</option>
+              <option value="0" ${!Number(btn.dataset.activoCon)?'selected':''}>INACTIVO</option>
+            </select>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" data-close>CANCELAR</button>
+            <button class="btn btn-primary" data-confirm>GUARDAR</button>
+          </div>`, async () => {
+          await api('editarContratista', {
+            id_contratista: btn.dataset.editCon,
+            razon_social: document.getElementById('m-rs').value,
+            nit: document.getElementById('m-nit').value,
+            telefono: document.getElementById('m-tel').value,
+            nombre_contacto: document.getElementById('m-ctc').value,
+            activo: document.getElementById('m-activo').value
+          });
+          toast('Contratista actualizado'); load();
+        });
+      });
+    });
+
+    // Nuevo vehículo
+    document.querySelectorAll('[data-nuevo-veh]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        openModal(`
+          <div class="modal-title">NUEVO VEHÍCULO</div>
+          <div class="field"><label>PLACA</label><input id="m-placa" placeholder="ABC123" style="text-transform:uppercase"></div>
+          <div class="field"><label>MODELO</label><input id="m-modelo" placeholder="Kenworth T800"></div>
+          <div class="field"><label>TIPO DE VEHÍCULO</label>
+            <select id="m-tipov">${tiposV.map(t=>`<option value="${t.id_tipoVehiculo}">${t.Nombre}</option>`).join('')}</select></div>
+          <div class="field"><label>TARA (kg) — peso vacío del vehículo</label><input id="m-tara" type="number" placeholder="8500"></div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" data-close>CANCELAR</button>
+            <button class="btn btn-primary" data-confirm>CREAR</button>
+          </div>`, async () => {
+          await api('crearVehiculo', {
+            id_contratista: btn.dataset.nuevoVeh,
+            placa: document.getElementById('m-placa').value.toUpperCase(),
+            modelo: document.getElementById('m-modelo').value,
+            id_tipoVehiculo: document.getElementById('m-tipov').value,
+            tara: document.getElementById('m-tara').value
+          });
+          toast('Vehículo creado'); load();
+        });
+      });
+    });
+
+    // Editar vehículo
+    document.querySelectorAll('[data-edit-veh]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        openModal(`
+          <div class="modal-title">EDITAR VEHÍCULO — ${btn.dataset.placa}</div>
+          <div class="field"><label>PLACA</label><input id="m-placa" value="${btn.dataset.placa}" style="text-transform:uppercase"></div>
+          <div class="field"><label>MODELO</label><input id="m-modelo" value="${btn.dataset.modelo}"></div>
+          <div class="field"><label>TIPO DE VEHÍCULO</label>
+            <select id="m-tipov">${tiposV.map(t=>`<option value="${t.id_tipoVehiculo}" ${String(t.id_tipoVehiculo)===String(btn.dataset.tipoVeh)?'selected':''}>${t.Nombre}</option>`).join('')}</select></div>
+          <div class="field"><label>CONTRATISTA (cambio genera histórico)</label>
+            <select id="m-contratista">${contratistas.map(co=>`<option value="${co.id_contratista}" ${String(co.id_contratista)===String(btn.dataset.conId)?'selected':''}>${co.Razon_social}</option>`).join('')}</select></div>
+          <div class="field"><label>TARA (kg)</label><input id="m-tara" type="number" value="${btn.dataset.tara}"></div>
+          <div class="field"><label>ESTADO</label>
+            <select id="m-activo">
+              <option value="1" ${Number(btn.dataset.activoVeh)?'selected':''}>ACTIVO</option>
+              <option value="0" ${!Number(btn.dataset.activoVeh)?'selected':''}>INACTIVO</option>
+            </select>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" data-close>CANCELAR</button>
+            <button class="btn btn-primary" data-confirm>GUARDAR</button>
+          </div>`, async () => {
+          await api('editarVehiculo', {
+            id_vehiculo: btn.dataset.editVeh,
+            placa: document.getElementById('m-placa').value.toUpperCase(),
+            modelo: document.getElementById('m-modelo').value,
+            id_tipoVehiculo: document.getElementById('m-tipov').value,
+            id_contratista: document.getElementById('m-contratista').value,
+            tara: document.getElementById('m-tara').value,
+            activo: document.getElementById('m-activo').value
+          });
+          toast('Vehículo actualizado'); load();
+        });
+      });
+    });
+
+    // Nuevo conductor
+    document.querySelectorAll('[data-nuevo-cond]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        openModal(`
+          <div class="modal-title">NUEVO CONDUCTOR</div>
+          <div class="field"><label>CÉDULA</label><input id="m-cedula" placeholder="12345678" type="text"></div>
+          <div class="field"><label>NOMBRE COMPLETO</label><input id="m-nombre" placeholder="Carlos Ramírez"></div>
+          <div class="field"><label>TELÉFONO</label><input id="m-tel" placeholder="3001234567"></div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" data-close>CANCELAR</button>
+            <button class="btn btn-primary" data-confirm>CREAR</button>
+          </div>`, async () => {
+          await api('crearConductor', {
+            id_contratista: btn.dataset.nuevoCond,
+            cedula: document.getElementById('m-cedula').value,
+            nombre: document.getElementById('m-nombre').value,
+            telefono: document.getElementById('m-tel').value
+          });
+          toast('Conductor creado'); load();
+        });
+      });
+    });
+
+    // Editar conductor
+    document.querySelectorAll('[data-edit-cond]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        openModal(`
+          <div class="modal-title">EDITAR CONDUCTOR</div>
+          <div class="field"><label>CÉDULA</label><input id="m-cedula" value="${btn.dataset.cedula}"></div>
+          <div class="field"><label>NOMBRE</label><input id="m-nombre" value="${btn.dataset.nombreCond}"></div>
+          <div class="field"><label>TELÉFONO</label><input id="m-tel" value="${btn.dataset.telCond}"></div>
+          <div class="field"><label>ESTADO</label>
+            <select id="m-activo">
+              <option value="1" ${Number(btn.dataset.activoCond)?'selected':''}>ACTIVO</option>
+              <option value="0" ${!Number(btn.dataset.activoCond)?'selected':''}>INACTIVO</option>
+            </select>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" data-close>CANCELAR</button>
+            <button class="btn btn-primary" data-confirm>GUARDAR</button>
+          </div>`, async () => {
+          await api('editarConductor', {
+            id_conductor: btn.dataset.editCond,
+            cedula: document.getElementById('m-cedula').value,
+            nombre: document.getElementById('m-nombre').value,
+            telefono: document.getElementById('m-tel').value,
+            activo: document.getElementById('m-activo').value
+          });
+          toast('Conductor actualizado'); load();
+        });
+      });
+    });
+  }
+
+  document.getElementById('btn-nuevo-con').addEventListener('click', () => {
+    openModal(`
+      <div class="modal-title">NUEVO CONTRATISTA</div>
+      <div class="field"><label>RAZÓN SOCIAL</label><input id="m-rs" placeholder="Empresa S.A."></div>
+      <div class="field"><label>NIT</label><input id="m-nit" placeholder="900123456"></div>
+      <div class="field"><label>TELÉFONO</label><input id="m-tel" placeholder="3001234567"></div>
+      <div class="field"><label>NOMBRE CONTACTO</label><input id="m-ctc" placeholder="Nombre contacto"></div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close>CANCELAR</button>
+        <button class="btn btn-primary" data-confirm>CREAR</button>
+      </div>`, async () => {
+      await api('crearContratista', {
+        razon_social: document.getElementById('m-rs').value,
+        nit: document.getElementById('m-nit').value,
+        telefono: document.getElementById('m-tel').value,
+        nombre_contacto: document.getElementById('m-ctc').value
+      });
+      toast('Contratista creado'); runFlow('gestionContratistas'); load();
+    });
+  });
+
+  runFlow('gestionContratistas');
+  await load();
+}
+
+// ----- LIQUIDACIONES -----
+async function screenLiquidaciones(c) {
+  c.innerHTML = `<div class="fadein">
+    <div class="page-header">
+      <div><div class="page-title"><i class="fa-solid fa-file-invoice-dollar"></i> Liquidaciones</div></div>
+      <button class="btn btn-primary" id="btn-generar-liq">+ GENERAR</button>
+    </div>
+    <div id="liq-table">Cargando...</div>
+  </div>`;
+
+  async function load() {
+    const data = await api('listarLiquidaciones');
+    if (!data.length) {
+      document.getElementById('liq-table').innerHTML = `<div class="alert alert-green">No hay liquidaciones generadas aún.</div>`;
+      return;
+    }
+    document.getElementById('liq-table').innerHTML = `
+      <div class="table-wrap"><table>
+        <thead><tr><th>ID</th><th>CONTRATISTA</th><th>PERIODO</th><th>TOTAL PESO</th><th>TRANSPORTE</th><th>MULTAS</th><th>VALOR NETO</th><th>ESTADO</th><th></th></tr></thead>
+        <tbody>${data.map(d => {
+          const est = String(d.Estado||'').toUpperCase();
+          return `<tr>
+            <td style="font-family:var(--mono);color:var(--text2)">#${d.id_liquidacion}</td>
+            <td>${d.contratista||d.id_contratista}</td>
+            <td style="font-size:11px">${fmtDate(d.Periodo_inicio)} → ${fmtDate(d.Periodo_fin)}</td>
+            <td>${Number(d.Total_peso||0).toLocaleString()} kg</td>
+            <td style="color:var(--green)">$${Number(d.Valor_transporte||0).toLocaleString()}</td>
+            <td style="color:${Number(d.Valor_multas)>0?'var(--red)':'var(--text2)'}">${Number(d.Valor_multas||0)>0?'−$'+Number(d.Valor_multas||0).toLocaleString():'—'}</td>
+            <td style="font-family:var(--mono);color:var(--green);font-weight:700">$${Number(d.Valor_total||0).toLocaleString()}</td>
+            <td><span class="badge ${est==='APROBADA'?'badge-green':est==='PENDIENTE'?'badge-amber':'badge-blue'}">${est}</span></td>
+            <td style="display:flex;gap:4px">
+              <button class="btn btn-secondary" style="font-size:10px;padding:4px 8px" data-ver-liq="${d.id_liquidacion}">👁 DETALLE</button>
+              <button class="btn btn-secondary" style="font-size:10px;padding:4px 8px;color:var(--danger);border-color:var(--danger-border)" data-pdf-liq="${d.id_liquidacion}">⬇ PDF</button>
+            </td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table></div>`;
+
+    document.querySelectorAll('[data-pdf-liq]').forEach(btn => {
+      btn.addEventListener('click', () => generarPDFLiquidacion(btn.dataset.pdfLiq));
+    });
+    document.querySelectorAll('[data-ver-liq]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.verLiq;
+        const dets = await api('detalleLiquidacion', {id_liquidacion: id});
+        const liq = data.find(d=>String(d.id_liquidacion)===String(id));
+        openModal(`
+          <div class="modal-title">DETALLE LIQUIDACIÓN #${id} — ${liq?.contratista||''}</div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">
+            <div class="stat-card"><div class="stat-val" style="font-size:14px">$${Number(liq?.Valor_transporte||0).toLocaleString()}</div><div class="stat-label">Transporte</div></div>
+            <div class="stat-card"><div class="stat-val" style="font-size:14px;color:var(--danger)">${Number(liq?.Valor_multas||0)>0?'−$'+Number(liq?.Valor_multas||0).toLocaleString():'$0'}</div><div class="stat-label">Multas descontadas</div></div>
+            <div class="stat-card"><div class="stat-val" style="font-size:14px;color:var(--green)">$${Number(liq?.Valor_total||0).toLocaleString()}</div><div class="stat-label">TOTAL NETO</div></div>
+          </div>
+          ${dets.length ? `<div class="table-wrap" style="max-height:280px;overflow-y:auto"><table>
+            <thead><tr><th>#</th><th>FECHA</th><th>TIPO RESIDUO</th><th>PLACA</th><th>PESO NETO</th><th>TARIFA</th><th>MULTA</th><th>SUBTOTAL</th></tr></thead>
+            <tbody>${dets.map(d=>{
+              const vt=Number(d.valor_transporte||d.Valor_transporte||0);
+              const vm=Number(d.valor_multa||d.Valor_multa||0);
+              const vs=Number(d.subtotal||d.Subtotal||0);
+              const pn=Number(d.Peso_neto||0);
+              const vpu=pn>0?Math.round(vt/pn):0;
+              return '<tr>' +
+                '<td style="font-family:var(--mono)">#'+d.id_ingreso+'</td>' +
+                '<td style="font-size:11px">'+fmtDate(d.Fecha_hora)+'</td>' +
+                '<td><span class="badge badge-blue" style="font-size:10px">'+( d.tipo_residuo||'—')+'</span></td>' +
+                '<td style="font-family:var(--mono);font-size:11px">'+(d.placa||'—')+'</td>' +
+                '<td>'+pn.toLocaleString()+' kg</td>' +
+                '<td style="font-size:11px;color:var(--text2)">$'+vpu.toLocaleString()+'/kg</td>' +
+                '<td style="color:'+(vm>0?'var(--danger)':'var(--text3)')+'">'+(vm>0?'−$'+vm.toLocaleString():'—')+'</td>' +
+                '<td style="font-family:var(--mono);font-weight:600">$'+vs.toLocaleString()+'</td>' +
+                '</tr>';
+            }).join('')}</tbody>
+          </table></div>` : '<div class="alert alert-amber">Sin registros de detalle.</div>'}
+          <div class="modal-footer"><button class="btn btn-secondary" data-close>CERRAR</button></div>`);
+      });
+    });
+  }
+
+  document.getElementById('btn-generar-liq').addEventListener('click', async () => {
+    const cons = await api('listarContratistas');
+    openModal(`
+      <div class="modal-title">GENERAR LIQUIDACIÓN MENSUAL</div>
+      <div class="field"><label>CONTRATISTA</label>
+        <select id="m-con">${cons.map(co=>`<option value="${co.id_contratista}">${co.Razon_social}</option>`).join('')}</select></div>
+      <div class="field"><label>FECHA INICIO DEL PERIODO</label><input id="m-ini" type="date"></div>
+      <div class="field"><label>FECHA FIN DEL PERIODO</label><input id="m-fin" type="date"></div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close>CANCELAR</button>
+        <button class="btn btn-primary" data-confirm>GENERAR</button>
+      </div>`, async () => {
+      try {
+        const res = await api('generarLiquidacion', {
+          id_contratista: document.getElementById('m-con').value,
+          periodo_inicio: document.getElementById('m-ini').value,
+          periodo_fin: document.getElementById('m-fin').value
+        });
+        toast(`Liquidación #${res.id_liquidacion} generada — Total: $${Number(res.valor_total).toLocaleString()}`);
+        runFlow('generarLiquidacion');
+        load();
+      } catch(e){ toast(e.message,'error'); }
+    });
+  });
+
+  await load();
+}
+
+// ----- APROBAR LIQ -----
+async function screenAprobarLiq(c) {
+  c.innerHTML = `<div class="fadein">
+    <div class="page-header"><div><div class="page-title"><i class="fa-solid fa-circle-check"></i> Aprobar Liquidaciones</div></div></div>
+    <div id="aliq-table">Cargando...</div>
+  </div>`;
+  const data = (await api('listarLiquidaciones')).filter(l=>{ const e=String(l.Estado||'').toUpperCase(); return e==='BORRADOR'||e==='PENDIENTE'; });
+  if (!data.length) {
+    document.getElementById('aliq-table').innerHTML = `<div class="alert alert-green">No hay liquidaciones pendientes de aprobación.</div>`;
+    return;
+  }
+  document.getElementById('aliq-table').innerHTML = `
+    <div class="table-wrap"><table>
+      <thead><tr><th>ID</th><th>CONTRATISTA</th><th>PERIODO</th><th>PESO TOTAL</th><th>TRANSPORTE</th><th>MULTAS</th><th>VALOR NETO</th><th></th></tr></thead>
+      <tbody>${data.map(d=>`<tr>
+        <td style="font-family:var(--mono)">#${d.id_liquidacion}</td>
+        <td>${d.contratista||d.id_contratista}</td>
+        <td style="font-size:11px">${fmtDate(d.Periodo_inicio)} → ${fmtDate(d.Periodo_fin)}</td>
+        <td>${Number(d.Total_peso||0).toLocaleString()} kg</td>
+        <td style="color:var(--green)">$${Number(d.Valor_transporte||0).toLocaleString()}</td>
+        <td style="color:${Number(d.Valor_multas||0)>0?'var(--danger)':'var(--text3)'}">${Number(d.Valor_multas||0)>0?'−$'+Number(d.Valor_multas||0).toLocaleString():'—'}</td>
+        <td style="font-family:var(--mono);font-weight:700;color:var(--green)">$${Number(d.Valor_total||0).toLocaleString()}</td>
+        <td style="display:flex;gap:4px">
+          <button class="btn btn-secondary" style="font-size:10px;padding:4px 8px" data-ver-apro="${d.id_liquidacion}">👁 VER</button>
+          <button class="btn btn-amber" style="font-size:10px" data-id="${d.id_liquidacion}">✓ APROBAR</button>
+        </td>
+      </tr>`).join('')}</tbody>
+    </table></div>`;
+  document.querySelectorAll('[data-ver-apro]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.dataset.verApro;
+      const dets = await api('detalleLiquidacion', {id_liquidacion: id});
+      const liq  = data.find(d=>String(d.id_liquidacion)===String(id));
+      const detalleHTML = dets.length
+        ? '<div class="table-wrap" style="max-height:260px;overflow-y:auto"><table>' +
+          '<thead><tr><th>#Ing</th><th>Transporte</th><th>Multa</th><th>Subtotal</th></tr></thead><tbody>' +
+          dets.map(function(d) {
+            const vt = Number(d.Valor_transporte||d.valor_transporte||0);
+            const vm = Number(d.Valor_multa||d.valor_multa||0);
+            const vs = Number(d.Subtotal||d.subtotal||0);
+            return '<tr>' +
+              '<td style="font-family:var(--mono)">#' + (d.id_ingreso||'—') + '</td>' +
+              '<td>$' + vt.toLocaleString() + '</td>' +
+              '<td style="color:' + (vm>0?'var(--danger)':'var(--text3)') + '">' + (vm>0?'−$'+vm.toLocaleString():'—') + '</td>' +
+              '<td style="font-weight:600">$' + vs.toLocaleString() + '</td>' +
+              '</tr>';
+          }).join('') +
+          '</tbody></table></div>'
+        : '<div class="alert alert-amber">Sin detalle de viajes.</div>';
+
+      openModal(
+        '<div class="modal-title">DETALLE LIQ. #' + id + ' — ' + (liq?.contratista||'') + '</div>' +
+        '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">' +
+          '<div class="stat-card"><div class="stat-val" style="font-size:14px">$' + Number(liq?.Valor_transporte||0).toLocaleString() + '</div><div class="stat-label">Transporte</div></div>' +
+          '<div class="stat-card"><div class="stat-val" style="font-size:14px;color:var(--danger)">' + (Number(liq?.Valor_multas||0)>0?'−$'+Number(liq?.Valor_multas||0).toLocaleString():'$0') + '</div><div class="stat-label">Multas</div></div>' +
+          '<div class="stat-card"><div class="stat-val" style="font-size:14px;color:var(--success)">$' + Number(liq?.Valor_total||0).toLocaleString() + '</div><div class="stat-label">Total a pagar</div></div>' +
+        '</div>' +
+        detalleHTML +
+        '<div class="modal-footer"><button class="btn btn-secondary" data-close>CERRAR</button></div>'
+      );
+    });
+  });
+  document.querySelectorAll('.btn-amber[data-id]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      await api('aprobarLiquidacion', {id_liquidacion: btn.dataset.id});
+      toast('Liquidación aprobada ✓');
+      runFlow('aprobarLiquidacion');
+      screenAprobarLiq(c);
+    });
+  });
+}
+
+// ----- USUARIOS -----
+async function screenUsuarios(c) {
+  c.innerHTML = `<div class="fadein">
+    <div class="page-header">
+      <div><div class="page-title"><i class="fa-solid fa-users"></i> Usuarios</div></div>
+      <button class="btn btn-primary" id="btn-nuevo-usr">+ NUEVO</button>
+    </div>
+    <div id="usr-table">Cargando...</div></div>`;
+
+  const roles = await api('listarRoles');
+
+  async function load() {
+    const data = await api('listarUsuarios');
+    document.getElementById('usr-table').innerHTML = `
+      <div class="table-wrap"><table>
+        <thead><tr><th>ID</th><th>USUARIO</th><th>ROL</th><th>ESTADO</th><th></th></tr></thead>
+        <tbody>${data.map(u=>`<tr>
+          <td style="font-family:var(--mono);color:var(--text2)">${u.id_usuario}</td>
+          <td style="font-family:var(--mono)">${u.Usuario||u.usuario}</td>
+          <td><span class="badge badge-blue">${u.rol_nombre||u.id_rol}</span></td>
+          <td><span class="badge ${Number(u.Activo)?'badge-green':'badge-red'}">${Number(u.Activo)?'ACTIVO':'INACTIVO'}</span></td>
+          <td><button class="btn btn-secondary" style="font-size:10px;padding:4px 8px"
+            data-edit-usr="${u.id_usuario}" data-usr-name="${u.Usuario||u.usuario}"
+            data-usr-rol="${u.id_rol}" data-usr-activo="${u.Activo}">EDITAR</button></td>
+        </tr>`).join('')}</tbody>
+      </table></div>`;
+
+    document.querySelectorAll('[data-edit-usr]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        openModal(`
+          <div class="modal-title">EDITAR USUARIO</div>
+          <div class="field"><label>USUARIO</label><input id="m-usr" value="${btn.dataset.usrName}"></div>
+          <div class="field"><label>NUEVA CONTRASEÑA <span style="color:var(--text3)">(dejar vacío para no cambiar)</span></label><input id="m-pwd" type="password" placeholder="••••"></div>
+          <div class="field"><label>ROL</label>
+            <select id="m-rol">${roles.map(r=>`<option value="${r.id_rol}" ${String(r.id_rol)===String(btn.dataset.usrRol)?'selected':''}>${r.Nombre}</option>`).join('')}</select></div>
+          <div class="field"><label>ESTADO</label>
+            <select id="m-activo">
+              <option value="1" ${Number(btn.dataset.usrActivo)?'selected':''}>ACTIVO</option>
+              <option value="0" ${!Number(btn.dataset.usrActivo)?'selected':''}>INACTIVO</option>
+            </select>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" data-close>CANCELAR</button>
+            <button class="btn btn-primary" data-confirm>GUARDAR</button>
+          </div>`, async () => {
+          const pwd = document.getElementById('m-pwd').value;
+          const payload = {
+            id_usuario: btn.dataset.editUsr,
+            usuario: document.getElementById('m-usr').value,
+            id_rol: document.getElementById('m-rol').value,
+            activo: document.getElementById('m-activo').value
+          };
+          if (pwd) payload.contrasena = pwd;
+          await api('editarUsuario', payload);
+          toast('Usuario actualizado'); load();
+        });
+      });
+    });
+  }
+
+  document.getElementById('btn-nuevo-usr').addEventListener('click', () => {
+    openModal(`
+      <div class="modal-title">NUEVO USUARIO</div>
+      <div class="field"><label>ROL</label>
+        <select id="m-rol">${roles.map(r=>`<option value="${r.id_rol}">${r.Nombre}</option>`).join('')}</select></div>
+      <div class="field"><label>USUARIO</label><input id="m-usr" placeholder="nombre_usuario"></div>
+      <div class="field"><label>CONTRASEÑA</label><input id="m-pwd" type="password"></div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close>CANCELAR</button>
+        <button class="btn btn-primary" data-confirm>CREAR</button>
+      </div>`, async () => {
+      await api('crearUsuario', {
+        id_rol: document.getElementById('m-rol').value,
+        usuario: document.getElementById('m-usr').value,
+        contrasena: document.getElementById('m-pwd').value
+      });
+      toast('Usuario creado'); load();
+    });
+  });
+  runFlow('gestionUsuarios');
+  await load();
+}
+
+// ----- TARIFAS -----
+async function screenTarifas(c) {
+  c.innerHTML = `<div class="fadein">
+    <div class="page-header">
+      <div><div class="page-title"><i class="fa-solid fa-tags"></i> Tarifas</div></div>
+      <button class="btn btn-primary" id="btn-nueva-tar">+ NUEVA</button>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+      <select id="fil-con-tar" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:var(--r);font-size:12px">
+        <option value="">Todos los contratistas</option>
+      </select>
+    </div>
+    <div id="tar-table">Cargando...</div></div>`;
+
+  const [cons, tipos] = await Promise.all([api('listarContratistas'), api('listarTiposResiduo')]);
+  const sel = document.getElementById('fil-con-tar');
+  cons.forEach(co => { const o=document.createElement('option'); o.value=co.id_contratista; o.textContent=co.Razon_social; sel.appendChild(o); });
+
+  let allData = [];
+  async function load() {
+    allData = await api('listarTarifas');
+    renderTable();
+  }
+  function renderTable() {
+    const fil = document.getElementById('fil-con-tar').value;
+    const data = fil ? allData.filter(t=>String(t.id_contratista)===fil) : allData;
+    document.getElementById('tar-table').innerHTML = data.length ? `
+      <div class="table-wrap"><table>
+        <thead><tr><th>ID</th><th>CONTRATISTA</th><th>TIPO RESIDUO</th><th>VALOR/KG</th><th>VIGENCIA</th><th>ESTADO</th><th></th></tr></thead>
+        <tbody>${data.map(t=>`<tr>
+          <td style="font-family:var(--mono);color:var(--text2)">${t.id_tarifa}</td>
+          <td>${t.contratista||t.id_contratista}</td>
+          <td>${t.tipo_residuo||t.id_tipoResiduo}</td>
+          <td style="font-family:var(--mono);color:var(--green)">$${Number(t.valor_por_unidad||t.Valor_por_unidad||t.valor_Por_unidad||0).toLocaleString()}/kg</td>
+          <td style="font-size:11px">${fmtDate(t.Fecha_inicio)} → ${t.Fecha_fin ? fmtDate(t.Fecha_fin) : '∞'}</td>
+          <td>${
+            t.vigencia_estado === 'vigente'   ? '<span class="badge badge-green">✓ VIGENTE</span>' :
+            t.vigencia_estado === 'futura'    ? '<span class="badge badge-blue">⏳ FUTURA</span>'  :
+            t.vigencia_estado === 'vencida'   ? '<span class="badge badge-red">✗ VENCIDA</span>'   :
+            t.vigencia_estado === 'sin_fecha' ? '<span class="badge badge-amber">SIN FECHA</span>' : ''
+          }</td>
+          <td><button class="btn btn-secondary" style="font-size:10px;padding:4px 8px"
+            data-edit-tar="${t.id_tarifa}" data-tar-val="${t.valor_por_unidad||t.Valor_por_unidad||0}"
+            data-tar-ini="${t.Fecha_inicio||t.fecha_inicio||''}" data-tar-fin="${t.Fecha_fin||t.fecha_fin||''}"
+            data-tar-activo="${t.Activo}">EDITAR</button></td>
+        </tr>`).join('')}</tbody>
+      </table></div>` : '<div class="alert alert-green">Sin tarifas para este filtro.</div>';
+
+    document.querySelectorAll('[data-edit-tar]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        openModal(`
+          <div class="modal-title">EDITAR TARIFA #${btn.dataset.editTar}</div>
+          <div class="field"><label>VALOR POR KG ($)</label><input id="m-val" type="number" value="${btn.dataset.tarVal}"></div>
+          <div class="field"><label>FECHA INICIO</label><input id="m-ini" type="date" value="${btn.dataset.tarIni}"></div>
+          <div class="field"><label>FECHA FIN <span style="color:var(--text3)">(vacío = vigente)</span></label><input id="m-fin" type="date" value="${btn.dataset.tarFin}"></div>
+          <div class="field"><label>ESTADO</label>
+            <select id="m-activo">
+              <option value="1" ${Number(btn.dataset.tarActivo)?'selected':''}>ACTIVA</option>
+              <option value="0" ${!Number(btn.dataset.tarActivo)?'selected':''}>INACTIVA</option>
+            </select>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" data-close>CANCELAR</button>
+            <button class="btn btn-primary" data-confirm>GUARDAR</button>
+          </div>`, async () => {
+          await api('editarTarifa', {
+            id_tarifa: btn.dataset.editTar,
+            valor_por_unidad: document.getElementById('m-val').value,
+            fecha_inicio: document.getElementById('m-ini').value,
+            fecha_fin: document.getElementById('m-fin').value,
+            activo: document.getElementById('m-activo').value
+          });
+          toast('Tarifa actualizada'); load();
+        });
+      });
+    });
+  }
+  sel.addEventListener('change', renderTable);
+
+  document.getElementById('btn-nueva-tar').addEventListener('click', () => {
+    openModal(`
+      <div class="modal-title">NUEVA TARIFA</div>
+      <div class="field"><label>CONTRATISTA</label>
+        <select id="m-con">${cons.map(co=>`<option value="${co.id_contratista}">${co.Razon_social}</option>`).join('')}</select></div>
+      <div class="field"><label>TIPO RESIDUO</label>
+        <select id="m-tipo">${tipos.map(t=>`<option value="${t.id_tipoResiduo}">${t.Nombre}</option>`).join('')}</select></div>
+      <div class="field"><label>VALOR POR KG ($)</label><input id="m-val" type="number" placeholder="300"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div class="field"><label>FECHA INICIO</label><input id="m-ini" type="date"></div>
+        <div class="field"><label>FECHA FIN <span style="color:var(--text3);font-weight:400">(vacío = vigente)</span></label><input id="m-fin" type="date"></div>
+      </div>
+      <div class="field field-hint" style="background:var(--primary-light);padding:8px;border-radius:var(--r);font-size:11px;color:var(--primary)">
+        <b>Vigencia:</b> La tarifa aplica para ingresos registrados entre Fecha Inicio y Fecha Fin. Si Fecha Fin queda vacía, la tarifa se considera vigente indefinidamente.
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close>CANCELAR</button>
+        <button class="btn btn-primary" data-confirm>CREAR</button>
+      </div>`, async () => {
+      await api('crearTarifa', {
+        id_contratista: document.getElementById('m-con').value,
+        id_tipoResiduo: document.getElementById('m-tipo').value,
+        valor_por_unidad: document.getElementById('m-val').value,
+        fecha_inicio: document.getElementById('m-ini').value,
+        fecha_fin: document.getElementById('m-fin')?.value || ''
+      });
+      toast('Tarifa creada'); load();
+    });
+  });
+  runFlow('gestionTarifas');
+  await load();
+}
+
+// ----- MULTAS -----
+async function screenMultas(c) {
+  c.innerHTML = `<div class="fadein">
+    <div class="page-header">
+      <div><div class="page-title"><i class="fa-solid fa-triangle-exclamation"></i> Configuración de Multas</div></div>
+      <button class="btn btn-primary" id="btn-nueva-mul">+ NUEVO TRAMO</button>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+      <select id="fil-con-mul" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:var(--r);font-size:12px">
+        <option value="">Todos los contratistas</option>
+      </select>
+    </div>
+    <div id="mul-table">Cargando...</div></div>`;
+
+  const [cons, tipos] = await Promise.all([api('listarContratistas'), api('listarTiposResiduo')]);
+  const consMap = {}, tiposMap = {};
+  cons.forEach(co=>{ consMap[co.id_contratista]=co.Razon_social; });
+  tipos.forEach(t=>{ tiposMap[t.id_tipoResiduo]=t.Nombre; });
+  const selMul = document.getElementById('fil-con-mul');
+  cons.forEach(co => { const o=document.createElement('option'); o.value=co.id_contratista; o.textContent=co.Razon_social; selMul.appendChild(o); });
+
+  let allMul = [];
+  async function load() {
+    allMul = await api('listarMultas');
+    renderMul();
+  }
+  function renderMul() {
+    const fil = document.getElementById('fil-con-mul').value;
+    const data = fil ? allMul.filter(m=>String(m.id_contratista)===fil) : allMul;
+    document.getElementById('mul-table').innerHTML = data.length ? `
+      <div class="table-wrap"><table>
+        <thead><tr><th>ID</th><th>CONTRATISTA</th><th>TIPO RESIDUO</th><th>TRAMO EXCESO (kg)</th><th>VALOR/KG</th></tr></thead>
+        <tbody>${data.map(m=>`<tr>
+          <td style="font-family:var(--mono);color:var(--text2)">${m.id_multa}</td>
+          <td>${consMap[m.id_contratista]||m.id_contratista}</td>
+          <td>${tiposMap[m.id_tipoResiduo]||m.id_tipoResiduo}</td>
+          <td style="font-family:var(--mono)">${Number(m.Minimo_kg).toLocaleString()} — ${Number(m.Maximo_kg).toLocaleString()} kg</td>
+          <td style="color:var(--red)">$${Number(m.Valor_multa).toLocaleString()}/kg</td>
+        </tr>`).join('')}</tbody>
+      </table></div>` : '<div class="alert alert-green">Sin tramos para este filtro.</div>';
+  }
+  selMul.addEventListener('change', renderMul);
+
+  document.getElementById('btn-nueva-mul').addEventListener('click', async () => {
+    const [cons, tipos] = await Promise.all([api('listarContratistas'), api('listarTiposResiduo')]);
+    openModal(`
+      <div class="modal-title">NUEVO TRAMO DE MULTA</div>
+      <div class="field"><label>CONTRATISTA</label>
+        <select id="m-con">${cons.map(co=>`<option value="${co.id_contratista}">${co.Razon_social}</option>`).join('')}</select></div>
+      <div class="field"><label>TIPO RESIDUO</label>
+        <select id="m-tipo">${tipos.map(t=>`<option value="${t.id_tipoResiduo}">${t.Nombre}</option>`).join('')}</select></div>
+      <div class="field"><label>KG MÍNIMO del exceso</label><input id="m-min" type="number" placeholder="0"></div>
+      <div class="field"><label>KG MÁXIMO del exceso</label><input id="m-max" type="number" placeholder="100"></div>
+      <div class="field"><label>VALOR MULTA POR KG ($)</label><input id="m-val" type="number" placeholder="500"></div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close>CANCELAR</button>
+        <button class="btn btn-primary" data-confirm>CREAR</button>
+      </div>`, async () => {
+      await api('crearMulta', {
+        id_contratista: document.getElementById('m-con').value,
+        id_tipoResiduo: document.getElementById('m-tipo').value,
+        minimo_kg: document.getElementById('m-min').value,
+        maximo_kg: document.getElementById('m-max').value,
+        valor_multa: document.getElementById('m-val').value
+      });
+      toast('Tramo de multa creado'); load(); renderMul();
+    });
+  });
+  runFlow('gestionMultas');
+  await load();
+}
+
+// ----- LIMITES -----
+async function screenLimites(c) {
+  c.innerHTML = `<div class="fadein">
+    <div class="page-header">
+      <div><div class="page-title"><i class="fa-solid fa-gauge-high"></i> Límites Autorizados</div></div>
+      <button class="btn btn-primary" id="btn-nuevo-lim">+ NUEVO</button>
+    </div>
+    <div id="lim-table">Cargando...</div></div>`;
+
+  async function load() {
+    const [data, tiposV, tiposR] = await Promise.all([
+      api('listarLimites'), api('listarTiposVehiculo'), api('listarTiposResiduo')
+    ]);
+    const tvMap = {}, trMap = {};
+    tiposV.forEach(t=>{ tvMap[t.id_tipoVehiculo]=t.Nombre; });
+    tiposR.forEach(t=>{ trMap[t.id_tipoResiduo]=t.Nombre; });
+    document.getElementById('lim-table').innerHTML = `
+      <div class="table-wrap"><table>
+        <thead><tr><th>ID</th><th>TIPO VEHÍCULO</th><th>TIPO RESIDUO</th><th>PESO MÁX (kg)</th></tr></thead>
+        <tbody>${data.map(l=>`<tr>
+          <td style="font-family:var(--mono);color:var(--text2)">${l.id_limite}</td>
+          <td>${tvMap[l.id_tipoVehiculo]||l.id_tipoVehiculo}</td>
+          <td>${trMap[l.id_tipoResiduo]||l.id_tipoResiduo}</td>
+          <td style="font-family:var(--mono)">${Number(l.Peso_max_kg).toLocaleString()} kg</td>
+        </tr>`).join('')}</tbody>
+      </table></div>`;
+  }
+
+  document.getElementById('btn-nuevo-lim').addEventListener('click', async () => {
+    const [tv, tr] = await Promise.all([api('listarTiposVehiculo'), api('listarTiposResiduo')]);
+    openModal(`
+      <div class="modal-title">NUEVO LÍMITE AUTORIZADO</div>
+      <div class="field"><label>TIPO VEHÍCULO</label>
+        <select id="m-tv">${tv.map(t=>`<option value="${t.id_tipoVehiculo}">${t.Nombre}</option>`).join('')}</select></div>
+      <div class="field"><label>TIPO RESIDUO</label>
+        <select id="m-tr">${tr.map(t=>`<option value="${t.id_tipoResiduo}">${t.Nombre}</option>`).join('')}</select></div>
+      <div class="field"><label>PESO MÁX (kg)</label><input id="m-peso" type="number" placeholder="10000"></div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close>CANCELAR</button>
+        <button class="btn btn-primary" data-confirm>CREAR</button>
+      </div>`, async () => {
+      await api('crearLimite', {
+        id_tipoVehiculo: document.getElementById('m-tv').value,
+        id_tipoResiduo: document.getElementById('m-tr').value,
+        peso_max_kg: document.getElementById('m-peso').value
+      });
+      toast('Límite creado'); load();
+    });
+  });
+  runFlow('gestionLimites');
+  await load();
+}
+
+
+// ----- HISTORIAL INGRESOS -----
+async function screenIngresos(c) {
+  c.innerHTML = `<div class="fadein">
+    <div class="page-header">
+      <div>
+        <div class="page-title"><i class="fa-solid fa-clipboard-list"></i> Historial de Ingresos</div>
+        <div class="page-sub">Registro de todos los ingresos al relleno sanitario</div>
+      </div>
+      <button class="btn btn-secondary" id="btn-reload-ing"><i class="fa-solid fa-rotate"></i> Actualizar</button>
+    </div>
+    <div id="ing-table">Cargando...</div>
+  </div>`;
+
+  async function load() {
+    const [ingresos, tipos, vehiculos, conductores] = await Promise.all([
+      api('listarTodosIngresos', {}),
+      api('listarTiposResiduo'),
+      api('listarVehiculos'),
+      api('listarConductores'),
+    ]);
+    const tiposMap = {}, vehMap = {}, condMap = {};
+    tipos.forEach(t => { tiposMap[t.id_tipoResiduo] = t.Nombre; });
+    vehiculos.forEach(v => { vehMap[v.id_vehiculo] = (v.Placa||'') + ' (' + (v.Modelo||'') + ')'; });
+    conductores.forEach(cd => { condMap[cd.id_conductor] = cd.Nombre || ''; });
+
+    if (!ingresos.length) {
+      document.getElementById('ing-table').innerHTML = '<div class="alert alert-blue"><i class="fa-solid fa-info-circle"></i> No hay ingresos registrados.</div>';
+      return;
+    }
+
+    ingresos.sort((a,b) => new Date(b.Fecha_hora||0) - new Date(a.Fecha_hora||0));
+
+    document.getElementById('ing-table').innerHTML = `
+      <div class="table-wrap"><table>
+        <thead><tr>
+          <th>#</th><th>FECHA</th><th>VEHÍCULO</th><th>CONDUCTOR</th>
+          <th>TIPO RESIDUO</th><th>PESO BRUTO</th><th>PESO NETO</th>
+          <th>SOBREPESO</th><th>OBS.</th>
+        </tr></thead>
+        <tbody>${ingresos.map(ing => {
+          const sp     = Number(ing.Sobrepeso||0) === 1;
+          const exceso = Number(ing.Cantidad_exceso||0);
+          return `<tr>
+            <td style="font-family:var(--mono);color:var(--text2)">#${ing.id_ingreso}</td>
+            <td style="font-size:12px">${fmtDate(ing.Fecha_hora)}</td>
+            <td>${vehMap[ing.id_vehiculo]||ing.id_vehiculo||'—'}</td>
+            <td>${condMap[ing.id_conductor]||ing.id_conductor||'—'}</td>
+            <td><span class="badge badge-blue">${tiposMap[ing.id_tipoResiduo]||'—'}</span></td>
+            <td>${Number(ing.Peso_bruto||0).toLocaleString()} kg</td>
+            <td style="font-weight:600">${Number(ing.Peso_neto||0).toLocaleString()} kg</td>
+            <td>${sp ? '<span class="badge badge-red"><i class="fa-solid fa-triangle-exclamation"></i> +'+exceso.toLocaleString()+' kg</span>' : '<span class="badge badge-green">Normal</span>'}</td>
+            <td style="font-size:12px;color:var(--text2);max-width:120px;overflow:hidden;text-overflow:ellipsis">${ing.Observaciones||'—'}</td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table></div>`;
+  }
+
+  runFlow('historialIngresos');
+  document.getElementById('btn-reload-ing').addEventListener('click', () => { runFlow('historialIngresos'); load(); });
+  await load();
+}
+
+
+function fmtDate(d) {
+  if (!d) return '—';
+  if (typeof d === 'string' && d.startsWith('Date(')) {
+    const parts = d.replace('Date(','').replace(')','').split(',');
+    return new Date(Number(parts[0]), Number(parts[1]), Number(parts[2])).toLocaleDateString('es-CO');
+  }
+  // Parsear fechas ISO sin desfase de zona horaria
+  if (typeof d === 'string' && /^\d{4}-\d{2}-\d{2}/.test(d)) {
+    const [y, m, day] = d.substring(0,10).split('-').map(Number);
+    return new Date(y, m-1, day).toLocaleDateString('es-CO');
+  }
+  const dt = new Date(d);
+  if (isNaN(dt)) return String(d).substring(0,10);
+  return dt.toLocaleDateString('es-CO');
+}
+
+
+// ============================================================
+// GENERAR PDF DE LIQUIDACIÓN
+// ============================================================
+async function generarPDFLiquidacion(idLiq) {
+  const data  = await api('listarLiquidaciones');
+  const liq   = data.find(d => String(d.id_liquidacion) === String(idLiq));
+  const dets  = await api('detalleLiquidacion', {id_liquidacion: idLiq});
+  const cons  = DB.Contratista.find(c => c.id_contratista === liq?.id_contratista) || {};
+  const tarifas = DB.Tarifa_cabecera
+    .filter(t => t.id_contratista === liq?.id_contratista && t.Activo)
+    .map(t => {
+      const det  = DB.Tarifa_detalle.filter(d => d.id_tarifa === t.id_tarifa).slice(-1)[0] || {};
+      const tipo = DB.Tipo_residuo.find(r => r.id_tipoResiduo === t.id_tipoResiduo) || {};
+      return { tipo: tipo.Nombre||'', valor: det.Valor_por_unidad||0, ini: det.Fecha_inicio||'', fin: det.Fecha_fin||'' };
+    });
+  const multas = DB.Multa_config
+    .filter(m => m.id_contratista === liq?.id_contratista)
+    .map(m => {
+      const tipo = DB.Tipo_residuo.find(r => r.id_tipoResiduo === m.id_tipoResiduo) || {};
+      return { tipo: tipo.Nombre||'', min: m.Minimo_kg, max: m.Maximo_kg, val: m.Valor_multa };
+    });
+
+  const fmt = n => '$' + Number(n||0).toLocaleString('es-CO');
+  const fmtKg = n => Number(n||0).toLocaleString('es-CO') + ' kg';
+  const hoy = new Date().toLocaleDateString('es-CO', {year:'numeric',month:'long',day:'numeric'});
+
+  const rowsDet = dets.map(d => {
+    const vm = Number(d.valor_multa||d.Valor_multa||0);
+    const vt = Number(d.valor_transporte||d.Valor_transporte||0);
+    const vs = Number(d.subtotal||d.Subtotal||0);
+    const pn = Number(d.Peso_neto||0);
+    return `<tr>
+      <td>${d.id_ingreso}</td>
+      <td>${fmtDate(d.Fecha_hora)}</td>
+      <td>${d.tipo_residuo||'—'}</td>
+      <td>${d.placa||'—'}</td>
+      <td style="text-align:right">${fmtKg(pn)}</td>
+      <td style="text-align:right">${fmt(vt)}</td>
+      <td style="text-align:right;color:#dc2626">${vm>0?'−'+fmt(vm):'—'}</td>
+      <td style="text-align:right;font-weight:600">${fmt(vs)}</td>
+    </tr>`;
+  }).join('');
+
+  const rowsTar = tarifas.map(t =>
+    `<tr><td>${t.tipo}</td><td style="text-align:right">${fmt(t.valor)}/kg</td><td>${t.ini||'—'}</td><td>${t.fin||'<span style="color:#16a34a">Vigente</span>'}</td></tr>`
+  ).join('');
+
+  const rowsMul = multas.map(m =>
+    `<tr><td>${m.tipo}</td><td style="text-align:right">${m.min.toLocaleString()} – ${m.max.toLocaleString()} kg</td><td style="text-align:right">${fmt(m.val)}/kg exceso</td></tr>`
+  ).join('');
+
+  const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
+  <title>Liquidación #${idLiq} — ${cons.Razon_social||''}</title>
+  <style>
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { font-family:'Segoe UI',Arial,sans-serif; font-size:12px; color:#111; background:#fff; padding:32px; }
+    .header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:28px; padding-bottom:16px; border-bottom:2px solid #2563eb; }
+    .brand { font-size:22px; font-weight:700; color:#2563eb; letter-spacing:1px; }
+    .brand-sub { font-size:11px; color:#6b7280; margin-top:2px; }
+    .doc-info { text-align:right; }
+    .doc-info .liq-num { font-size:20px; font-weight:700; color:#111; }
+    .doc-info .liq-est { display:inline-block; background:${liq?.Estado==='APROBADA'?'#dcfce7':'#eff6ff'}; color:${liq?.Estado==='APROBADA'?'#16a34a':'#2563eb'}; border-radius:20px; padding:2px 12px; font-size:11px; font-weight:600; margin-top:4px; }
+    .section { margin-bottom:22px; }
+    .section-title { font-size:10px; font-weight:700; color:#6b7280; letter-spacing:1.5px; text-transform:uppercase; margin-bottom:8px; padding-bottom:4px; border-bottom:1px solid #e5e7eb; }
+    .info-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .info-item label { font-size:10px; color:#9ca3af; display:block; margin-bottom:2px; }
+    .info-item span { font-size:13px; font-weight:500; }
+    table { width:100%; border-collapse:collapse; font-size:11px; }
+    th { background:#f1f5f9; padding:7px 10px; text-align:left; font-size:10px; color:#64748b; letter-spacing:.5px; border-bottom:1px solid #e2e8f0; }
+    td { padding:7px 10px; border-bottom:1px solid #f1f5f9; }
+    tr:last-child td { border-bottom:none; }
+    .totals { background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:16px; margin-top:8px; }
+    .total-row { display:flex; justify-content:space-between; padding:5px 0; font-size:12px; }
+    .total-row.main { font-size:16px; font-weight:700; color:#2563eb; border-top:1px solid #e2e8f0; padding-top:10px; margin-top:4px; }
+    .footer { margin-top:40px; display:grid; grid-template-columns:1fr 1fr; gap:40px; }
+    .firma { border-top:1px solid #374151; padding-top:6px; text-align:center; font-size:11px; color:#6b7280; }
+    @media print { body { padding:16px; } button { display:none !important; } }
+  </style></head><body>
+  <div class="header">
+    <div>
+      <div class="brand">RECOLECTA E.S.P</div>
+      <div class="brand-sub">Sistema de Gestión de Rellenos Sanitarios</div>
+      <div style="margin-top:8px;font-size:11px;color:#6b7280">Generado el ${hoy}</div>
+    </div>
+    <div class="doc-info">
+      <div class="liq-num">LIQUIDACIÓN #${idLiq}</div>
+      <div><span class="liq-est">${liq?.Estado||'BORRADOR'}</span></div>
+      <div style="font-size:11px;color:#6b7280;margin-top:6px">Periodo: ${fmtDate(liq?.Periodo_inicio)} → ${fmtDate(liq?.Periodo_fin)}</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Datos del Contratista</div>
+    <div class="info-grid">
+      <div class="info-item"><label>Razón Social</label><span>${cons.Razon_social||'—'}</span></div>
+      <div class="info-item"><label>NIT</label><span>${cons.NIT||'—'}</span></div>
+      <div class="info-item"><label>Contacto</label><span>${cons.Nombre_contacto||'—'}</span></div>
+      <div class="info-item"><label>Teléfono</label><span>${cons.Telefono||'—'}</span></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Tarifas Aplicadas</div>
+    <table><thead><tr><th>Tipo de Residuo</th><th style="text-align:right">Valor/kg</th><th>Vigencia Inicio</th><th>Vigencia Fin</th></tr></thead>
+    <tbody>${rowsTar||'<tr><td colspan="4" style="color:#9ca3af">Sin tarifas registradas</td></tr>'}</tbody></table>
+  </div>
+
+  ${multas.length ? `<div class="section">
+    <div class="section-title">Configuración de Multas</div>
+    <table><thead><tr><th>Tipo de Residuo</th><th style="text-align:right">Tramo Exceso</th><th style="text-align:right">Valor Multa</th></tr></thead>
+    <tbody>${rowsMul}</tbody></table>
+  </div>` : ''}
+
+  <div class="section">
+    <div class="section-title">Detalle de Viajes (${dets.length} ingresos)</div>
+    <table><thead><tr><th>#</th><th>Fecha</th><th>Tipo Residuo</th><th>Vehículo</th><th style="text-align:right">Peso Neto</th><th style="text-align:right">Transporte</th><th style="text-align:right">Multa</th><th style="text-align:right">Subtotal</th></tr></thead>
+    <tbody>${rowsDet}</tbody></table>
+  </div>
+
+  <div class="totals">
+    <div class="total-row"><span>Total peso transportado</span><span>${fmtKg(liq?.Total_peso)}</span></div>
+    <div class="total-row"><span>Valor transporte</span><span>${fmt(liq?.Valor_transporte)}</span></div>
+    <div class="total-row"><span style="color:#dc2626">Descuento por multas</span><span style="color:#dc2626">${Number(liq?.Valor_multas||0)>0?'−'+fmt(liq?.Valor_multas):'$0'}</span></div>
+    <div class="total-row main"><span>TOTAL A PAGAR</span><span>${fmt(liq?.Valor_total)}</span></div>
+  </div>
+
+  <div class="footer">
+    <div class="firma">Firma Contratista<br>${cons.Razon_social||''}</div>
+    <div class="firma">Firma RECOLECTA E.S.P<br>Autorizado por</div>
+  </div>
+
+  <div style="text-align:center;margin-top:24px">
+    <button onclick="window.print()" style="background:#2563eb;color:#fff;border:none;padding:10px 28px;border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit">🖨 Imprimir / Guardar PDF</button>
+    <button onclick="window.close()" style="background:#f1f5f9;color:#374151;border:1px solid #e2e8f0;padding:10px 20px;border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit;margin-left:8px">Cerrar</button>
+  </div>
+  </body></html>`;
+
+  const win = window.open('', '_blank', 'width=900,height=700,scrollbars=yes');
+  win.document.write(html);
+  win.document.close();
+}
+
+// ============================================================
+// AUTH
+// ============================================================
+document.getElementById('btn-login').addEventListener('click', async () => {
+  const u = document.getElementById('inp-user').value.trim();
+  const p = document.getElementById('inp-pass').value;
+  const errEl = document.getElementById('login-error');
+  errEl.style.display='none';
+  try {
+    // Primero anima login en ERD (si ya está visible, no importa)
+    const user = await api('login', {usuario:u, contrasena:p});
+    S.user = user;
+    S.rol = user.rol;
+
+    document.getElementById('screen-login').classList.add('hidden');
+    document.getElementById('app').style.display='flex';
+    document.getElementById('top-user').textContent = user.usuario;
+    document.getElementById('top-rol').textContent = user.rol;
+
+    renderNav(user.rol);
+    buildERD();
+
+    // Animación de login en ERD
+    setTimeout(() => runFlow('login'), 500);
+
+    // Activar primera pantalla
+    const first = document.querySelector('.nav-item');
+    if (first) { first.classList.add('active'); renderScreen(first.dataset.screen); }
+  } catch(e) {
+    errEl.textContent = e.message; errEl.style.display='block';
+  }
+});
+
+document.getElementById('inp-pass').addEventListener('keydown', e => {
+  if(e.key==='Enter') document.getElementById('btn-login').click();
+});
+
+document.getElementById('btn-logout').addEventListener('click', () => {
+  S.user=null; S.rol=null;
+  document.getElementById('app').style.display='none';
+  document.getElementById('screen-login').classList.remove('hidden');
+  document.getElementById('inp-pass').value='';
+  document.getElementById('login-error').style.display='none';
+});
+
+// Configurar URL
+// Ctrl+Shift+M toggles ERD panel
+document.addEventListener('keydown', e => {
+  if (e.ctrlKey && e.shiftKey && e.key === 'M') toggleERD();
+});
+
+// Drag to move the floating ERD panel
+(function() {
+  let dragging=false, ox=0, oy=0, px=0, py=0;
+  const handle = document.getElementById('erd-drag-handle');
+  const panel  = document.getElementById('erd-panel');
+  if (!handle) return;
+  handle.addEventListener('mousedown', e => {
+    if (e.target.classList.contains('erd-close')) return;
+    dragging=true;
+    const r=panel.getBoundingClientRect();
+    ox=e.clientX-r.left; oy=e.clientY-r.top;
+    panel.style.right='auto'; panel.style.bottom='auto';
+    px=r.left; py=r.top;
+    panel.style.left=px+'px'; panel.style.top=py+'px';
+    e.preventDefault();
+  });
+  document.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    panel.style.left=(e.clientX-ox)+'px';
+    panel.style.top=(e.clientY-oy)+'px';
+  });
+  document.addEventListener('mouseup', () => dragging=false);
+})();
+
+
+
+// Cerrar modal al click fuera
+document.getElementById('modal-overlay').addEventListener('click', e => {
+  if(e.target===document.getElementById('modal-overlay')) closeModal();
+});
+
+// Rebuild ERD on resize
+window.addEventListener('resize', () => { if(S.user) buildERD(); });
+
+/* ============================================================
+   APPS SCRIPT CORREGIDO — Pegar en Google Apps Script
+   Cambios vs versión anterior:
+   1. registrarIngreso: soporta celdas_distribucion (array multi-celda)
+      y marca celda como INACTIVA cuando alcanza capacidad_max
+   2. asignarTipoResiduo: usa findIndex en lugar de indexOf para
+      soportar nombres de columna con cualquier capitalización
+   ============================================================
+
+function asignarTipoResiduo(data) {
+  const sheet = getSheet("Celda_Tipo_residuo");
+  const headers = sheet.getRange(1,1,1,sheet.getLastColumn()).getValues()[0].map(h=>String(h));
+  const id = nextId(sheet);
+  const row = headers.map(h => {
+    const hl = h.toLowerCase();
+    if (hl === 'id_celdaresiduo' || hl === 'id') return id;
+    if (hl === 'id_celda')                        return data.id_celda;
+    if (hl === 'id_tiporesiduo')                  return data.id_tipoResiduo;
+    if (hl === 'peso_acumulado')                  return 0;
+    if (hl === 'activo')                          return 1;
+    return '';
+  });
+  sheet.appendRow(row);
+  return { ok: true };
+}
+
+function registrarIngreso(data) {
+  const sheet = getSheet("Ingreso");
+  const id = nextId(sheet);
+
+  const vehiculos = sheetToObjects(getSheet("Vehiculo"));
+  const v = vehiculos.find(r => Number(r.id_vehiculo) === Number(data.id_vehiculo));
+  const tara = v ? Number(v.Tara) : 0;
+  const peso_neto = Number(data.peso_bruto) - tara;
+
+  const limites = sheetToObjects(getSheet("Limite_autorizado"));
+  const limite = limites.find(r =>
+    Number(r.id_tipoVehiculo) === Number(v?.id_tipoVehiculo) &&
+    Number(r.id_tipoResiduo)  === Number(data.id_tipoResiduo)
+  );
+  const sobrepeso = limite && peso_neto > Number(limite.Peso_max_kg) ? 1 : 0;
+  const exceso    = sobrepeso ? peso_neto - Number(limite.Peso_max_kg) : 0;
+
+  sheet.appendRow([
+    id, data.id_centro||1, data.id_vehiculo, data.id_conductor,
+    data.id_tipoResiduo, data.id_usuario,
+    data.id_limite || (limite ? limite.id_limite : ""),
+    new Date(), Number(data.peso_bruto), peso_neto,
+    sobrepeso, exceso, data.observaciones||""
+  ]);
+
+  // Distribución multi-celda
+  const distribucion = data.celdas_distribucion ||
+    (data.id_celda ? [{id_celda: data.id_celda, kg: peso_neto}] : []);
+
+  if (distribucion.length) {
+    const cSheet  = getSheet("Celda");
+    const cData   = cSheet.getDataRange().getValues();
+    const headers = cData[0].map(h=>String(h).toLowerCase());
+    const idxId   = headers.findIndex(h=>h==='id_celda');
+    const idxPeso = headers.findIndex(h=>h==='peso_acumulado');
+    const idxCap  = headers.findIndex(h=>h==='capacidad_max');
+    const idxAct  = headers.findIndex(h=>h==='activo');
+    const icSheet = getSheet("Ingreso_celda");
+
+    distribucion.forEach(d => {
+      for (let i = 1; i < cData.length; i++) {
+        if (Number(cData[i][idxId]) === Number(d.id_celda)) {
+          const actual   = Number(cData[i][idxPeso]) || 0;
+          const nuevo    = actual + Number(d.kg);
+          cSheet.getRange(i+1, idxPeso+1).setValue(nuevo);
+          if (idxCap>=0 && idxAct>=0) {
+            const cap = Number(cData[i][idxCap]);
+            if (cap>0 && nuevo>=cap) cSheet.getRange(i+1, idxAct+1).setValue(0);
+          }
+          break;
+        }
+      }
+      icSheet.appendRow([nextId(icSheet), d.id_celda, id, Number(d.kg)]);
+    });
+  }
+  return { id_ingreso: id, peso_neto, sobrepeso, exceso };
+}
+============================================================ */
+</script>
+</body>
+</html>
